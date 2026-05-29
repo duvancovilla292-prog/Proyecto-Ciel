@@ -77,18 +77,32 @@ async function iniciarBot() {
         
             const NUMERO_PROPIETARIO = "3228595906"; 
         
+            // Extraemos los números limpios
             const numeroBot = sock.user && sock.user.id ? sock.user.id.split(':')[0].split('@')[0] : "";
             const numeroSender = sender ? sender.split(':')[0].split('@')[0] : "";
         
-            const esBot = numeroBot.length >= 10 && numeroBot.includes(NUMERO_PROPIETARIO);
-            const esDuenio = numeroSender.length >= 10 && numeroSender.includes(NUMERO_PROPIETARIO);
+            // 🕵️‍♂️ RASTREADOR MÍSTICO (Esto se imprimirá en la pantalla negra de Render)
+            console.log(`[SEGURIDAD] Intento de comando: ${texto}`);
+            console.log(`[SEGURIDAD] Propietario configurado: ${NUMERO_PROPIETARIO}`);
+            console.log(`[SEGURIDAD] Quién envía (numeroSender): "${numeroSender}"`);
+            console.log(`[SEGURIDAD] Número del Bot (numeroBot): "${numeroBot}"`);
         
-            if (!esBot && !esDuenio) {
+            // Validación ultra directa usando igualdad exacta o herencia de tu número
+            const esDuenioDirecto = numeroSender === NUMERO_PROPIETARIO || numeroSender.includes(NUMERO_PROPIETARIO);
+            const esElBotCambiandoEstado = numeroBot === numeroSender && numeroBot.length > 0;
+        
+            console.log(`[SEGURIDAD] ¿Es dueño?: ${esDuenioDirecto} | ¿Es el bot?: ${esElBotCambiandoEstado}`);
+        
+            // Si NO eres dueño y NO eres el bot, se te deniega el acceso obligatoriamente
+            if (!esDuenioDirecto && !esElBotCambiandoEstado) {
+                console.log(`[SEGURIDAD] 🛑 ACCESO RECHAZADO para: ${numeroSender}`);
                 await sock.sendMessage(chatJid, { 
                     text: "🛑 *《 ACCESO DENEGADO 》*\n\nNo tienes los permisos místicos necesarios. Solo el **propietario del bot** puede encender o apagar mis funciones." 
                 }, { quoted: msg });
                 return; 
             }
+        
+            console.log(`[SEGURIDAD] ✅ ACCESO CONCEDIDO`);
         
             if (texto === '#on') {
                 chatsActivos[chatJid] = true;
@@ -106,7 +120,7 @@ async function iniciarBot() {
                 return;
             }
         }
-
+        
         if (!chatsActivos[chatJid]) return;
 
         // ==========================================
