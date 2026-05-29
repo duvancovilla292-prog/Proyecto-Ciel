@@ -74,12 +74,14 @@ async function iniciarBot() {
         // COMANDOS RÁPIDOS DE ENCENDIDO / APAGADO
         // ==========================================
         if (texto === '#on' || texto === '#off') {
+            const NUMERO_PROPIETARIO = "573228595906"; 
+
             const numeroBot = sock.user.id.split(':')[0].split('@')[0];
             const numeroSender = sender.split(':')[0].split('@')[0];
 
-            if (numeroBot !== numeroSender) {
+            if (numeroBot !== numeroSender && numeroSender !== NUMERO_PROPIETARIO) {
                 await sock.sendMessage(chatJid, { 
-                    text: "🛑 *《 ACCESO DENEGADO 》*\n\nNo tienes los permisos místicos necesarios. Solo el **propietario del bot** puede encender o apagar mis funciones." 
+                    text: "🛑 *《 ACCESO DENEGADO 》*\n\nNo tienes los permisos místicos necesarios..." 
                 }, { quoted: msg });
                 return; 
             }
