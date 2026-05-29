@@ -400,7 +400,7 @@ def manejar_economia(db, user_id, comando, args, ahora):
         return "《✧》A Javier le gusta chupar pito!!!!!!."
     
     elif comando in ["#thomas"]:
-        return "《✧》A Thomas hhhhhh."
+        return "《✧》A Thomas le gusta *Javier*."
     
 
     return None

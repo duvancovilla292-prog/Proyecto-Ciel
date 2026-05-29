@@ -77,11 +77,11 @@ async function iniciarBot() {
         
             const NUMERO_PROPIETARIO = "3228595906"; 
         
-            const numeroBot = sock.user.id.split(':')[0].split('@')[0];
-            const numeroSender = sender.split(':')[0].split('@')[0];
+            const numeroBot = sock.user && sock.user.id ? sock.user.id.split(':')[0].split('@')[0] : "";
+            const numeroSender = sender ? sender.split(':')[0].split('@')[0] : "";
         
-            const esBot = numeroBot.includes(NUMERO_PROPIETARIO);
-            const esDuenio = numeroSender.includes(NUMERO_PROPIETARIO);
+            const esBot = numeroBot.length >= 10 && numeroBot.includes(NUMERO_PROPIETARIO);
+            const esDuenio = numeroSender.length >= 10 && numeroSender.includes(NUMERO_PROPIETARIO);
         
             if (!esBot && !esDuenio) {
                 await sock.sendMessage(chatJid, { 
