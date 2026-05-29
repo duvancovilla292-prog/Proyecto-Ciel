@@ -74,25 +74,29 @@ async function iniciarBot() {
         // COMANDOS RÁPIDOS DE ENCENDIDO / APAGADO
         // ==========================================
         if (texto === '#on' || texto === '#off') {
-            const NUMERO_PROPIETARIO = "573228595906"; 
-
+        
+            const NUMERO_PROPIETARIO = "3228595906"; 
+        
             const numeroBot = sock.user.id.split(':')[0].split('@')[0];
             const numeroSender = sender.split(':')[0].split('@')[0];
-
-            if (numeroBot !== numeroSender && numeroSender !== NUMERO_PROPIETARIO) {
+        
+            const esBot = numeroBot.includes(NUMERO_PROPIETARIO);
+            const esDuenio = numeroSender.includes(NUMERO_PROPIETARIO);
+        
+            if (!esBot && !esDuenio) {
                 await sock.sendMessage(chatJid, { 
-                    text: "🛑 *《 ACCESO DENEGADO 》*\n\nNo tienes los permisos místicos necesarios..." 
+                    text: "🛑 *《 ACCESO DENEGADO 》*\n\nNo tienes los permisos místicos necesarios. Solo el **propietario del bot** puede encender o apagar mis funciones." 
                 }, { quoted: msg });
                 return; 
             }
-
+        
             if (texto === '#on') {
                 chatsActivos[chatJid] = true;
                 guardarChats(chatsActivos);
                 await sock.sendMessage(chatJid, { text: "✨ *¡Bot activado con éxito!* Las funciones místicas están listas para este chat." }, { quoted: msg });
                 return;
             }
-
+        
             if (texto === '#off') {
                 if (chatsActivos[chatJid]) {
                     delete chatsActivos[chatJid];
