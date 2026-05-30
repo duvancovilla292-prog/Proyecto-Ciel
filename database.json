@@ -5,7 +5,7 @@
         "banco": 0,
         "inventario": {},
         "nivel": 1,
-        "xp": 362
+        "xp": 378
     },
     "124279358226436@lid": {
         "nombre": "Graterol Crisbely!!",
@@ -21,7 +21,7 @@
         "banco": 0,
         "inventario": {},
         "nivel": 1,
-        "xp": 25
+        "xp": 216
     },
     "163363711676587@lid": {
         "nombre": ".",
@@ -54,5 +54,125 @@
         "inventario": {},
         "nivel": 1,
         "xp": 35
+    },
+    "51617051226246@lid": {
+        "nombre": "Andrés",
+        "billetera": 0,
+        "banco": 0,
+        "inventario": {},
+        "nivel": 1,
+        "xp": 389
+    },
+    "145260592271487@lid": {
+        "nombre": "ANDRES RUEDA",
+        "billetera": 0,
+        "banco": 0,
+        "inventario": {},
+        "nivel": 1,
+        "xp": 353
+    },
+    "87338260643845@lid": {
+        "nombre": "Velasquez",
+        "billetera": 0,
+        "banco": 0,
+        "inventario": {},
+        "nivel": 1,
+        "xp": 104
+    },
+    "223879482081433@lid": {
+        "nombre": "Jhorman",
+        "billetera": 0,
+        "banco": 0,
+        "inventario": {},
+        "nivel": 1,
+        "xp": 62
+    },
+    "219735325163754@lid": {
+        "nombre": "Sofi",
+        "billetera": 0,
+        "banco": 0,
+        "inventario": {},
+        "nivel": 1,
+        "xp": 47
+    },
+    "21444956299303@lid": {
+        "nombre": "Exneider",
+        "billetera": 0,
+        "banco": 0,
+        "inventario": {},
+        "nivel": 1,
+        "xp": 56
+    },
+    "168427293519872@lid": {
+        "nombre": "ANDRES",
+        "billetera": 0,
+        "banco": 0,
+        "inventario": {},
+        "nivel": 1,
+        "xp": 135
+    },
+    "5643738079331@lid": {
+        "nombre": "Mary🖤",
+        "billetera": 0,
+        "banco": 0,
+        "inventario": {},
+        "nivel": 1,
+        "xp": 15
+    },
+    "189052129124432@lid": {
+        "nombre": "Joan",
+        "billetera": 0,
+        "banco": 0,
+        "inventario": {},
+        "nivel": 1,
+        "xp": 16
+    },
+    "210445143118017@lid": {
+        "nombre": "julian1290quiroga",
+        "billetera": 0,
+        "banco": 0,
+        "inventario": {},
+        "nivel": 1,
+        "xp": 17
+    },
+    "120714787090550@lid": {
+        "nombre": "[𝐊𝗮𝗀𝗲r𝗼u (陽🏛️)]",
+        "billetera": 0,
+        "banco": 0,
+        "inventario": {},
+        "nivel": 1,
+        "xp": 17
+    },
+    "231915919528081@lid": {
+        "nombre": "Carlos Said Perez Gutierr",
+        "billetera": 0,
+        "banco": 0,
+        "inventario": {},
+        "nivel": 1,
+        "xp": 19
+    },
+    "147150428209376@lid": {
+        "nombre": "Bot!!!",
+        "billetera": 0,
+        "banco": 0,
+        "inventario": {},
+        "nivel": 1,
+        "xp": 19
+    },
+    "120363427291374092@g.us": {
+        "nombre": "Usuario",
+        "billetera": 0,
+        "banco": 0,
+        "inventario": {},
+        "nivel": 1,
+        "xp": 19
+    },
+    "37061692256374@lid": {
+        "nombre": "Nicol",
+        "billetera": 0,
+        "banco": 0,
+        "inventario": {},
+        "nivel": 1,
+        "xp": 23
     }
 }
