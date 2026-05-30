@@ -4,37 +4,102 @@ const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const { Sticker, StickerTypes } = require('wa-sticker-formatter');
+const { MongoClient } = require('mongodb');
 process.env.FFMPEG_PATH = require('ffmpeg-static');
 
 const { GoogleGenAI } = require('@google/genai');
 
 const ai = new GoogleGenAI({ apiKey: "AIzaSyCJ4ek9FK4iPChSh1r-wB22fu34sY9Irjk" }); 
 
-const RUTA_CHATS = path.join(__dirname, 'chats_activos.json');
-const RUTA_DB = path.join(__dirname, 'database.json');
 // ==========================================
-// CONTROLADORES DE ALMACENAMIENTO
+// CONFIGURACIÓN DE MONGODB ATLAS
 // ==========================================
-function cargarDB() {
-    if (!fs.existsSync(RUTA_DB)) return {};
-    try { return JSON.parse(fs.readFileSync(RUTA_DB, 'utf-8')); } catch (e) { return {}; }
-}
+const MONGO_URI = "mongodb+srv://cielbot:cielbot292@cluster0.o3phddj.mongodb.net/?appName=Cluster0";
+const client = new MongoClient(MONGO_URI);
 
-function guardarDB(data) {
-    fs.writeFileSync(RUTA_DB, JSON.stringify(data, null, 4));
-}
+let db, coleccionChats, coleccionNiveles;
 
-function cargarChats() {
-    if (!fs.existsSync(RUTA_CHATS)) return {};
-    try { 
-        return JSON.parse(fs.readFileSync(RUTA_CHATS, 'utf-8')); 
-    } catch (e) { 
-        return {}; 
+async function conectarBaseDeDatos() {
+    try {
+        await client.connect();
+        db = client.db('BotCielDB'); 
+        coleccionChats = db.collection('chats_activos'); 
+        coleccionNiveles = db.collection('usuarios_niveles');
+        console.log("🔮 [DATABASE] ¡Conexión mística y permanente establecida con MongoDB Atlas!");
+    } catch (error) {
+        console.error("🛑 [DATABASE] Error crítico al conectar a MongoDB:", error);
     }
 }
 
-function guardarChats(data) {
-    fs.writeFileSync(RUTA_CHATS, JSON.stringify(data, null, 4));
+// ==========================================
+// CONTROLADORES DE ALMACENAMIENTO DE NIVELES (MONGODB)
+// ==========================================
+
+async function obtenerNivelUsuarioDB(senderId, pushName) {
+    try {
+        let usuario = await coleccionNiveles.findOne({ _id: senderId });
+        if (!usuario) {
+            usuario = {
+                _id: senderId,
+                nombre: pushName,
+                billetera: 0,
+                banco: 0,
+                inventario: {},
+                nivel: 1,
+                xp: 0
+            };
+            await coleccionNiveles.insertOne(usuario);
+        }
+        return usuario;
+    } catch (error) {
+        console.error("Error al obtener niveles de MongoDB:", error);
+        return { _id: senderId, nombre: pushName, billetera: 0, banco: 0, inventario: {}, nivel: 1, xp: 0 };
+    }
+}
+
+
+async function guardarNivelUsuarioDB(usuario) {
+    try {
+        await coleccionNiveles.updateOne(
+            { _id: usuario._id },
+            { $set: usuario },
+            { upsert: true }
+        );
+    } catch (error) {
+        console.error("Error al guardar niveles en MongoDB:", error);
+    }
+}
+
+
+async function cargarChats() {
+    try {
+        const documentos = await coleccionChats.find({}).toArray();
+        const chats = {};
+        documentos.forEach(doc => {
+            chats[doc.chatJid] = doc.activo;
+        });
+        return chats;
+    } catch (error) {
+        console.error("Error al cargar chats desde MongoDB:", error);
+        return {};
+    }
+}
+
+
+async function guardarChatEnMongo(chatJid, estado) {
+    try {
+        if (estado) {
+            await coleccionChats.updateOne(
+                { chatJid: chatJid },
+                { $set: { chatJid: chatJid, activo: true } },
+                { upsert: true }
+            );
+        } else {
+            await coleccionChats.deleteOne({ chatJid: chatJid });
+        }
+    } catch (error) {
+        console.error("Error al guardar chat en MongoDB:", error);
+    }
 }
 
 const cooldownXP = new Set();
@@ -42,6 +107,9 @@ const cooldownXP = new Set();
 async function iniciarBot() {
     const { state, saveCreds } = await useMultiFileAuthState('sesion_whatsapp');
     
+    await conectarBaseDeDatos();
+    let chatsActivos = await cargarChats();
+
     const sock = makeWASocket({
         auth: state,
         printQRInTerminal: true 
@@ -68,7 +136,7 @@ async function iniciarBot() {
 
         const citoMensaje = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
 
-        const chatsActivos = cargarChats();
+        chatsActivos = await cargarChats();
 
         // ==========================================
         // COMANDOS RÁPIDOS DE ENCENDIDO / APAGADO
@@ -96,7 +164,7 @@ async function iniciarBot() {
         
             if (texto === '#on') {
                 chatsActivos[chatJid] = true;
-                guardarChats(chatsActivos);
+                await guardarChatEnMongo(chatJid, true);
                 await sock.sendMessage(chatJid, { text: "✨ *¡Bot activado con éxito!* Las funciones místicas están listas para este chat." }, { quoted: msg });
                 return;
             }
@@ -104,7 +172,7 @@ async function iniciarBot() {
             if (texto === '#off') {
                 if (chatsActivos[chatJid]) {
                     delete chatsActivos[chatJid];
-                    guardarChats(chatsActivos);
+                    await guardarChatEnMongo(chatJid, false);
                 }
                 await sock.sendMessage(chatJid, { text: "💤 *¡Bot apagado!* Me iré a dormir en este chat hasta que vuelvas a usar `#on`." }, { quoted: msg });
                 return;
@@ -118,13 +186,10 @@ async function iniciarBot() {
         // ==========================================
         if (texto && !texto.startsWith('#')) {
             if (!cooldownXP.has(sender)) {
-                const db = cargarDB();
                 
-                if (!db[sender]) {
-                    db[sender] = { nombre: pushName, billetera: 0, banco: 0, inventario: {} };
-                }
                 
-                let usuario = db[sender];
+                let usuario = await obtenerNivelUsuarioDB(sender, pushName);
+                
                 if (!usuario.nivel) usuario.nivel = 1;
                 if (!usuario.xp) usuario.xp = 0;
                 if (!usuario.nombre) usuario.nombre = pushName;
@@ -142,7 +207,8 @@ async function iniciarBot() {
                     await sock.sendMessage(chatJid, { text: textoLevelUp }, { quoted: msg });
                 }
 
-                guardarDB(db);
+                
+                await guardarNivelUsuarioDB(usuario);
 
                 cooldownXP.add(sender);
                 setTimeout(() => {
@@ -198,7 +264,6 @@ async function iniciarBot() {
                 });
 
                 const bufferSticker = await stickerMistico.toBuffer();
-                
                 
                 await sock.sendMessage(chatJid, { 
                     sticker: bufferSticker
@@ -271,6 +336,7 @@ async function iniciarBot() {
             
             const respuestaRaw = stdout.trim();
             if (!respuestaRaw) return;
+
             // ==========================================
             // VISOR MULTIMEDIA
             // ==========================================
