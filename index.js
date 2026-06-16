@@ -9,7 +9,7 @@ process.env.FFMPEG_PATH = require('ffmpeg-static');
 
 const { GoogleGenAI } = require('@google/genai');
 
-const ai = new GoogleGenAI({ apiKey: "AIzaSyCJ4ek9FK4iPChSh1r-wB22fu34sY9Irjk" }); 
+const ai = new GoogleGenAI({ apiKey: "......." }); 
 
 // ==========================================
 // CONFIGURACIÓN DE MONGODB ATLAS
@@ -141,18 +141,20 @@ async function iniciarBot() {
         // ==========================================
         // COMANDOS RÁPIDOS DE ENCENDIDO / APAGADO
         // ==========================================
+        console.log(`💬 [MENSAJE] De: ${pushName} | ID: ${sender} | Chat: ${chatJid} | Texto: "${texto}"`);
         if (texto === '#on' || texto === '#off') {
         
             const ADMINS_PERMITIDOS = [
                 "3228595906",     
                 "50530508369988", 
-                "573228595906"  
+                "573228595906",
+                "58025192730711"  
             ]; 
         
             const numeroBot = sock.user && sock.user.id ? sock.user.id.split(':')[0].split('@')[0] : "";
             const numeroSender = sender ? sender.split(':')[0].split('@')[0] : "";
         
-            const esDuenioDirecto = ADMINS_PERMITIDOS.some(admin => numeroSender.includes(admin));
+            const esDuenioDirecto = ADMINS_PERMITIDOS.some(admin => numeroSender.includes(admin) || admin.includes(numeroSender));
             const esElBotCambiandoEstado = numeroBot === numeroSender && numeroBot.length > 0;
         
             if (!esDuenioDirecto && !esElBotCambiandoEstado) {
