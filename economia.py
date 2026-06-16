@@ -144,6 +144,15 @@ def manejar_economia(db, user_id, comando, args, ahora):
             f"• `#poke` \n• `#pout` \n• `#punch` \n• `#run` \n• `#sad` \n• `#scared` \n• `#shrug`\n"
             f"• `#slap` \n• `#sleep` \n• `#smirk` \n• `#smoke` \n• `#spit` _(#escupir)_\n"
             f"• `#step` _(#pisar)_ \n• `#think` \n• `#tickle` \n• `#walk`\n\n"
+            f"📥 *MÓDULO DE DESCARGAS (8)*\n"
+            f"• `#play` / `#yt` / `#ytaudio` » Descarga el audio de un video de YouTube en formato MP3.\n"
+            f"• `#mp4` / `#ytmp4` » Descarga un video directamente desde YouTube en formato MP4.\n"
+            f"• `#tiktok` / `#tt` » Descarga cualquier video de TikTok sin marca de agua.\n"
+            f"• `#ig` / `#instagram` / `#reel` » Obtiene videos, imágenes o reels de Instagram.\n"
+            f"• `#fb` / `#facebook` » Descarga videos y contenido multimedia de Facebook.\n\n"
+            f"🧠 *HERRAMIENTAS E IA (3)*\n"
+            f"• `#ciel [pregunta]` » Conversa con la Inteligencia Artificial de Gemini en tiempo real.\n"
+            f"• `#s` / `#sticker` » Convierte imágenes o videos cortos en stickers interactivos.\n\n"
             f"> _Recuerda escribir los comandos respetando los argumentos indicados entre corchetes._"
         )
     elif comando in ["#coinflip", "#cf"]:
