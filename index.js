@@ -9,7 +9,7 @@ process.env.FFMPEG_PATH = require('ffmpeg-static');
 
 const { GoogleGenAI } = require('@google/genai');
 
-const ai = new GoogleGenAI({ apiKey: "......." }); 
+const ai = new GoogleGenAI({ apiKey: "" }); 
 
 // ==========================================
 // CONFIGURACIÓN DE MONGODB ATLAS
