@@ -27,7 +27,7 @@ CATALOGO_PERSONAJES = {
         "estrellas": "★★★★",
         "puntos": 10,
         "valor_venta": 15000,
-        "imagen": "https://i.imgur.com/DiabloNoir.png",
+        "imagen": "diablo.jpeg",
         "descripcion": "El Demonio Primordial Negro (Noir). Obsesionado con servir fielmente a Rimuru, su elegancia es tan inmensa como su crueldad hacia sus enemigos.",
         "visuales": ["🔴  [🧤] 🔴\n🤝 (  ͡° ͜ʖ ͡° ) 🍷 < *Todo sea por la absoluta voluntad de Rimuru-sama.*"]
     },
@@ -37,7 +37,7 @@ CATALOGO_PERSONAJES = {
         "estrellas": "★★★★",
         "puntos": 10,
         "valor_venta": 15000,
-        "imagen": "https://i.imgur.com/VeldanavaGod.png",
+        "imagen": "veldanava.jpeg",
         "descripcion": "El Dragón Estelar de la Creación y el Dios original de todo el multiverso. Su poder omnipresente e intelecto absoluto dieron forma a la existencia misma.",
         "visuales": ["🌌  [✨] 🌌\n🪐 (  👁️_👁️ ) 🪐 < *Yo soy el principio y el fin de la realidad.*"]
     },
@@ -47,7 +47,7 @@ CATALOGO_PERSONAJES = {
         "estrellas": "★★★★",
         "puntos": 10,
         "valor_venta": 15000,
-        "imagen": "https://i.imgur.com/EinsteinTheory.png",
+        "imagen": "Albert.jpeg",
         "descripcion": "El físico teórico más famoso de la historia. Dominó el tejido del espacio-tiempo con su Teoría de la Relatividad y redefinió las leyes universales.",
         "visuales": ["🌌  [🧠] 🌌\n✨ (  ͡° 🧮 ͡° ) 💫  < *E = mc²... El espacio y el tiempo son relativos.*"]
     },
@@ -57,7 +57,7 @@ CATALOGO_PERSONAJES = {
         "estrellas": "★★★★",
         "puntos": 10,
         "valor_venta": 15000,
-        "imagen": "https://i.imgur.com/GuyCrimson.png",
+        "imagen": "guy.jpeg",
         "descripcion": "El Primordial Rojo (Rouge) y líder indiscutible de los Reyes Demonios de la Octagrama. Balancea el orden del mundo entero con su sola presencia.",
         "visuales": ["🔥  [👑] 🔥\n🍷 (🔥_🔥) 🗡️   < *El poder sin control no es más que un espectáculo barato.*"]
     },
@@ -67,7 +67,7 @@ CATALOGO_PERSONAJES = {
         "estrellas": "★★★★",
         "puntos": 10,
         "valor_venta": 15000,
-        "imagen": "https://i.imgur.com/SukunaKing.png",
+        "imagen": "sukuna.jpeg",
         "descripcion": "El Rey de las Maldiciones. Un ser despiadado de la era Heian capaz de cortar la existencia misma con su Expansión de Dominio: Relicario Malévolo.",
         "visuales": ["💀  [👁️] 💀\n07 (◣_◢) 🩸   < *¡Párense firmes, insectos! Secar y Cortar.*"]
     },
@@ -78,7 +78,7 @@ CATALOGO_PERSONAJES = {
         "estrellas": "★★★",
         "puntos": 5,
         "valor_venta": 6000,
-        "imagen": "https://i.imgur.com/SenkuScience.png",
+        "imagen": "senku.jpg",
         "descripcion": "Un genio científico determinado a reconstruir la civilización desde cero utilizando el poder de la ciencia pura tras 3700 años de petrificación.",
         "visuales": ["🧪  [🥬] 🧪\n🚀 (  • ̀ω•́  ) 🔬 < *¡Esto es un diez mil millones por ciento emocionante!*"]
     },
@@ -98,7 +98,7 @@ CATALOGO_PERSONAJES = {
         "estrellas": "★★★",
         "puntos": 5,
         "valor_venta": 6000,
-        "imagen": "https://i.imgur.com/BenimaruKijin.png",
+        "imagen": "benimaru.jpg",
         "descripcion": "El Comandante General del ejército de Tempest. Un Kijin de fuego bendecido con un liderazgo nato y letales habilidades tácticas de combate.",
         "visuales": ["🔥  [⚔️] 🔥\n👹 (🔥_🔥) 🗡️  < *¡Ardan en las Llamas del Purgatorio!*"]
     },
@@ -108,7 +108,7 @@ CATALOGO_PERSONAJES = {
         "estrellas": "★★★",
         "puntos": 5,
         "valor_venta": 6000,
-        "imagen": "https://i.imgur.com/TsukasaStrong.png",
+        "imagen": "sukasa.jpeg",
         "descripcion": "El estudiante de preparatoria más fuerte de todos. Su fuerza física le permite abatir leones a puño limpio, buscando crear un mundo primitivo e incorrupto.",
         "visuales": ["🦁  [🥊] 🦁\n💪 (◣_◢) 🦴     < *Estableceré un nuevo mundo libre de tecnología y adultos.*"]
     },
@@ -118,7 +118,7 @@ CATALOGO_PERSONAJES = {
         "estrellas": "★★★",
         "puntos": 5,
         "valor_venta": 6000,
-        "imagen": "https://i.imgur.com/DrXenoNasa.png",
+        "imagen": "xeno.webp",
         "descripcion": "Un brillante ex-científico de la NASA que lidera la colonia americana. Su dominio de la ingeniería militar busca imponer el control absoluto.",
         "visuales": ["🔫  [⚙️] 🔫\n🚬 (  ͡~ ͜ʖ ͡° ) 🧪 < *La ciencia es elegante, pero el verdadero fin es el control.*"]
     },
@@ -138,7 +138,7 @@ CATALOGO_PERSONAJES = {
         "estrellas": "★★★",
         "puntos": 5,
         "valor_venta": 6000,
-        "imagen": "https://i.imgur.com/RyusuiGreed.png",
+        "imagen": "riusui.jpg",
         "descripcion": "El codicioso y extraordinario navegante del Reino de la Ciencia. Su ambición impulsa la economía del nuevo mundo bajo su lema: ¡El deseo es justicia!",
         "visuales": ["🚢  [🪙] 🚢\n🎩 (  ͡💸 ͜ʖ ͡° ) 🌊 < *¡Todo en este mundo me pertenece! ¡Ja-ha!*"]
     },
@@ -169,7 +169,7 @@ CATALOGO_PERSONAJES = {
         "estrellas": "★★★★",
         "puntos": 3,
         "valor_venta": 2500,
-        "imagen": "https://i.imgur.com/CielManas.png",
+        "imagen": "ciel.jpeg",
         "descripcion": "La evolución del 'Gran Sabio' y 'Rafael'. Un Manas (núcleo inteligente espiritual) con un procesamiento lógico optimizado al 100% y consejera perfecta.",
         "visuales": ["🌐  [🧠] 🌐\n⚡ (  • ̀ω•́  ) 📊 < *Análisis lógico completo. Optimización de datos al 100%.*"]
     },
@@ -179,7 +179,7 @@ CATALOGO_PERSONAJES = {
         "estrellas": "★★",
         "puntos": 3,
         "valor_venta": 2500,
-        "imagen": "https://i.imgur.com/GenMentalist.png",
+        "imagen": "gen.jpeg",
         "descripcion": "El astuto mentalista y psicólogo experto en la manipulación social. Es la mano derecha de Senku para manejar tratos difíciles e intrigas.",
         "visuales": ["🃏  [🎭] 🃏\n👘 (  ͡~ ͜ʖ ͡° ) 🥤  < *Solo soy un simple psicólogo superficial...*"]
     },
