@@ -143,23 +143,19 @@ async function iniciarBot() {
         // ==========================================
         console.log(`💬 [MENSAJE] De: ${pushName} | ID: ${sender} | Chat: ${chatJid} | Texto: "${texto}"`);
         if (texto === '#on' || texto === '#off') {
-        
-            const ADMINS_PERMITIDOS = [
-                "3228595906",     
-                "50530508369988", 
+            
+            const ADMINS_FIJOS = [
                 "573228595906",
-                "58025192730711"  
+                "3228595906"
             ]; 
         
-            const numeroBot = sock.user && sock.user.id ? sock.user.id.split(':')[0].split('@')[0] : "";
             const numeroSender = sender ? sender.split(':')[0].split('@')[0] : "";
+            const esEnviadoPorMi = msg.key && msg.key.fromMe === true;
+            const esAdminEnGrupo = ADMINS_FIJOS.includes(numeroSender);
         
-            const esDuenioDirecto = ADMINS_PERMITIDOS.some(admin => numeroSender.includes(admin) || admin.includes(numeroSender));
-            const esElBotCambiandoEstado = numeroBot === numeroSender && numeroBot.length > 0;
-        
-            if (!esDuenioDirecto && !esElBotCambiandoEstado) {
+            if (!esEnviadoPorMi && !esAdminEnGrupo) {
                 await sock.sendMessage(chatJid, { 
-                    text: "🛑 *《 ACCESO DENEGADO 》*\n\nNo tienes los permisos místicos necesarios. Solo el **propietario del bot** puede encender o apagar mis funciones." 
+                    text: "🛑 *《 ACCESO DENEGADO 》*\n\nNo tienes los permisos místicos necesarios. Solo el **propietario del bot** puede modificar el estado del sistema." 
                 }, { quoted: msg });
                 return; 
             }
