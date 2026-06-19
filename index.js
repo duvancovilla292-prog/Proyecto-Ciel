@@ -25,7 +25,7 @@ async function conectarBaseDeDatos() {
         db = client.db('BotCielDB'); 
         coleccionChats = db.collection('chats_activos'); 
         coleccionNiveles = db.collection('usuarios_niveles');
-        console.log("🔮 [DATABASE] ¡Conexión mística y permanente establecida con MongoDB Atlas!");
+        console.log("🔮 [DATABASE] ¡Conexión permanente establecida con MongoDB Atlas!");
     } catch (error) {
         console.error("🛑 [DATABASE] Error crítico al conectar a MongoDB:", error);
     }
@@ -141,7 +141,7 @@ async function iniciarBot() {
         // ==========================================
         // COMANDOS RÁPIDOS DE ENCENDIDO / APAGADO
         // ==========================================
-        console.log(`💬 [MENSAJE] De: ${pushName} | ID: ${sender} | Chat: ${chatJid} | Texto: "${texto}"`);
+        // console.log(`💬 [MENSAJE] De: ${pushName} | ID: ${sender} | Chat: ${chatJid} | Texto: "${texto}"`);
         if (texto === '#on' || texto === '#off') {
             
             const ADMINS_FIJOS = [
