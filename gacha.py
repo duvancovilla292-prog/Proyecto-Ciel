@@ -100,7 +100,7 @@ CATALOGO_PERSONAJES = {
         "estrellas": "★★★★",
         "puntos": 10,
         "valor_venta": 15000,
-        "imagen": "https://i.imgur.com/GojoLegendary.png",
+        "imagen": "gojo.jpeg",
         "descripcion": "El chamán más fuerte del mundo. Poseedor de los Seis Ojos y la técnica de Infinito. Nadie puede tocarlo.",
         "visuales": ["👁️  [🕶️] 👁️\n  (  ͡° ͜ʖ ͡° )  < *No te preocupes, soy el más fuerte.*"]
     },
@@ -205,7 +205,7 @@ CATALOGO_PERSONAJES = {
         "estrellas": "★★★",
         "puntos": 5,
         "valor_venta": 6000,
-        "imagen": "https://i.imgur.com/CidEpic.png",
+        "imagen": "cid.webp",
         "descripcion": "Líder de Shadow Garden. No le interesa ser el héroe ni el villano, él opera desde las sombras.",
         "visuales": ["⬛  [🧥] ⬛\n  (  👁️_👁️ )  < *I am... Atomic.*"]
     },
@@ -240,7 +240,7 @@ CATALOGO_PERSONAJES = {
         "estrellas": "★★",
         "puntos": 3,
         "valor_venta": 2500,
-        "imagen": "https://i.imgur.com/ChromeScience.png",
+        "imagen": "chr.jpg",
         "descripcion": "El 'hechicero' nativo del nuevo mundo que redescubrió la química por su cuenta recolectando minerales. Fiel discípulo y compañero de Senku.",
         "visuales": ["🪨  [🧪] 🪨\n⚒️ ( ⊙_⊙ ) 🔥   < *¡Esto no es brujería, esto es increíblemente genial!*"]
     },
@@ -260,7 +260,7 @@ CATALOGO_PERSONAJES = {
         "estrellas": "★★",
         "puntos": 3,
         "valor_venta": 2500,
-        "imagen": "https://i.imgur.com/IsagiRare.png",
+        "imagen": "si.jpg",
         "descripcion": "Un delantero que busca destruir el fútbol tradicional para convertirse en el egoísta definitivo de Blue Lock.",
         "visuales": ["⚽  [🏃‍♂️] ⚽\n  ( 🧩_🧩 )  < *¡Puedo ver las piezas del rompecabezas!*"]
     },
@@ -270,7 +270,7 @@ CATALOGO_PERSONAJES = {
         "estrellas": "★★",
         "puntos": 3,
         "valor_venta": 2500,
-        "imagen": "https://i.imgur.com/MegumiRare.png",
+        "imagen": "megujjk.jpg",
         "descripcion": "Chamán de primer grado que utiliza la técnica de las Diez Sombras para invocar Shikigamis.",
         "visuales": ["🐺  [👥] 🐺\n  (  🦹‍♂️_🦹‍♂️ )  < *¡Furia del Tigre y el Toro!*"]
     },
@@ -285,7 +285,7 @@ CATALOGO_PERSONAJES = {
         "estrellas": "★",
         "puntos": 1,
         "valor_venta": 1000,
-        "imagen": "https://i.imgur.com/SuikaMelon.png",
+        "imagen": "suika.jpeg",
         "descripcion": "Una tierna niña del Reino de la Ciencia que usa una cáscara de sandía para corregir su visión borrosa. Actúa como la espía perfecta.",
         "visuales": ["🍉  [👀] 🍉\n🤸 ( • ω • ) 🍃  < *¡Suika al rescate e investigación, de verdad!*"]
     },
@@ -295,7 +295,7 @@ CATALOGO_PERSONAJES = {
         "estrellas": "★",
         "puntos": 1,
         "valor_venta": 1000,
-        "imagen": "https://i.imgur.com/TaijuStone.png",
+        "imagen": "tai.jpg",
         "descripcion": "El mejor amigo de Senku, poseedor de una resistencia infinita y fuerza descomunal, manteniendo una estricta política de cero violencia.",
         "visuales": ["🪵  [💪] 🪵\n🗣️ (◣_◢)💥     < *¡SENKUUUU! ¡HE RECOLECTADO DIEZ MIL TRONCOS DE MADERA!*"]
     },
@@ -305,7 +305,7 @@ CATALOGO_PERSONAJES = {
         "estrellas": "★",
         "puntos": 1,
         "valor_venta": 1000,
-        "imagen": "https://i.imgur.com/YuzurihaCraft.png",
+        "imagen": "yusu.jpg",
         "descripcion": "Experta en artesanía, costura y reconstrucción textil. Su paciencia es vital para rearmar los fragmentos petrificados rotos de los humanos.",
         "visuales": ["🧵  [🌸] 🧵\n🎀 (✿ • ‿ • ) ✂️  < *¡Puedo coser y reparar cualquier tejido roto de inmediato!*"]
     },
@@ -315,7 +315,7 @@ CATALOGO_PERSONAJES = {
         "estrellas": "★",
         "puntos": 1,
         "valor_venta": 1000,
-        "imagen": "https://i.imgur.com/RigurdGoblin.png",
+        "imagen": "rigur.jpg",
         "descripcion": "El leal líder de los Goblins que pasó de ser un anciano débil a un musculoso sub-líder tras recibir un nombre de Rimuru.",
         "visuales": ["🍃  [💪] 🍃\n🧌 (🔥_🔥) ✨   < *¡RIMURU-SAMA ES NUESTRO SUPREMO LÍDER! ¡KUAJAAAA!*"]
     },
