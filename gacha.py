@@ -1,6 +1,19 @@
 import random
 
 CATALOGO_PERSONAJES = {
+    #==================================================
+    # Personajes de anime/manga | 4 estrellas | ★★★★
+    #==================================================
+    "Ciel": {
+        "serie": "Tensura",
+        "rareza": "Legendario",
+        "estrellas": "★★★★",
+        "puntos": 3,
+        "valor_venta": 2500,
+        "imagen": "ciel.jpeg",
+        "descripcion": "La evolución del 'Gran Sabio' y 'Rafael'. Un Manas (núcleo inteligente espiritual) con un procesamiento lógico optimizado al 100% y consejera perfecta.",
+        "visuales": ["🌐  [🧠] 🌐\n⚡ (  • ̀ω•́  ) 📊 < *Análisis lógico completo. Optimización de datos al 100%.*"]
+    },
     "Sung Jin-woo": {
         "serie": "Solo Leveling",
         "rareza": "Legendario",
@@ -71,6 +84,30 @@ CATALOGO_PERSONAJES = {
         "descripcion": "El Rey de las Maldiciones. Un ser despiadado de la era Heian capaz de cortar la existencia misma con su Expansión de Dominio: Relicario Malévolo.",
         "visuales": ["💀  [👁️] 💀\n07 (◣_◢) 🩸   < *¡Párense firmes, insectos! Secar y Cortar.*"]
     },
+    "Rimuru Tempest": {
+        "serie": "Tensura",
+        "rareza": "Legendario",
+        "estrellas": "★★★★",
+        "puntos": 10,
+        "valor_venta": 15000,
+        "imagen": "8.jpeg",
+        "descripcion": "El fundador y rey de la Federación Jura Tempest. Un Slime extrañamente poderoso con la habilidad de devorar y copiar habilidades.",
+        "visuales": ["🔹  [🔵] 🔹\n  ( • ω • )  < *¡Hola!*", "⚔️  [👤] ⚔️\n  空 (🔥_🔥) 斬  < *¡Forma Humana!*"]
+    },
+    "Gojo Satoru": {
+        "serie": "Jujutsu Kaisen",
+        "rareza": "Legendario",
+        "estrellas": "★★★★",
+        "puntos": 10,
+        "valor_venta": 15000,
+        "imagen": "https://i.imgur.com/GojoLegendary.png",
+        "descripcion": "El chamán más fuerte del mundo. Poseedor de los Seis Ojos y la técnica de Infinito. Nadie puede tocarlo.",
+        "visuales": ["👁️  [🕶️] 👁️\n  (  ͡° ͜ʖ ͡° )  < *No te preocupes, soy el más fuerte.*"]
+    },
+
+    #==================================================
+    # Personajes de anime/manga | 3 estrellas | ★★★
+    #==================================================
 
     "Senku Ishigami": {
         "serie": "Dr. Stone",
@@ -152,6 +189,30 @@ CATALOGO_PERSONAJES = {
         "descripcion": "Archimaga del clan de los Demonios Carmesí. Dedicó todo su talento exclusivamente a perfeccionar un único hechizo místico: ¡Explosion!",
         "visuales": ["💥  [🧙‍♀️] 💥\n✨ (🔥_🔥) 🪄   < *¡EXPLOSIONNNN!* _(Se cae al suelo agotada)_"]
     },
+    "Ben Tennyson": {
+        "serie": "Ben 10",
+        "rareza": "Épico",
+        "estrellas": "★★★",
+        "puntos": 5,
+        "valor_venta": 6000,
+        "imagen": "https://i.imgur.com/Ben10Epic.png",
+        "descripcion": "Un chico normal de 10 años que encontró un reloj alienígena intergaláctico. ¡Es hora de ser héroe!",
+        "visuales": ["⌚  [👽] ⌚\n  ( 🟢_🟢 )  < *¡Omnitrix activado!*"]
+    },
+    "Cid Kagenou": {
+        "serie": "The Eminence in Shadow",
+        "rareza": "Épico",
+        "estrellas": "★★★",
+        "puntos": 5,
+        "valor_venta": 6000,
+        "imagen": "https://i.imgur.com/CidEpic.png",
+        "descripcion": "Líder de Shadow Garden. No le interesa ser el héroe ni el villano, él opera desde las sombras.",
+        "visuales": ["⬛  [🧥] ⬛\n  (  👁️_👁️ )  < *I am... Atomic.*"]
+    },
+
+    #==================================================
+    # Personajes de anime/manga | 2 estrellas | ★★
+    #==================================================
 
     "Shuna": {
         "serie": "Tensura",
@@ -162,16 +223,6 @@ CATALOGO_PERSONAJES = {
         "imagen": "https://i.imgur.com/ShunaPrincess.png",
         "descripcion": "La princesa de los Kijin, experta en alta cocina y magia de soporte. Su dulce sonrisa esconde un aura intimidante que asusta al propio Rimuru.",
         "visuales": ["🌸  [🍵] 🌸\n👘 (✿ • ‿ • ) ✨ < *¿Rimuru-sama, prefiere mi comida o la de Shion?*"]
-    },
-    "Ciel": {
-        "serie": "Tensura",
-        "rareza": "Legendario",
-        "estrellas": "★★★★",
-        "puntos": 3,
-        "valor_venta": 2500,
-        "imagen": "ciel.jpeg",
-        "descripcion": "La evolución del 'Gran Sabio' y 'Rafael'. Un Manas (núcleo inteligente espiritual) con un procesamiento lógico optimizado al 100% y consejera perfecta.",
-        "visuales": ["🌐  [🧠] 🌐\n⚡ (  • ̀ω•́  ) 📊 < *Análisis lógico completo. Optimización de datos al 100%.*"]
     },
     "Gen Asagiri": {
         "serie": "Dr. Stone",
@@ -203,6 +254,30 @@ CATALOGO_PERSONAJES = {
         "descripcion": "La primera integrante y segunda al mando de Shadow Garden. Maneja impecablemente la organización desde las sombras con una lógica intachable.",
         "visuales": ["⬛  [📜] ⬛\n✨ ( • ω • ) ⚔️   < *Todo marcha en estricto orden de acuerdo al plan de Shadow-sama.*"]
     },
+    "Isagi Yoichi": {
+        "serie": "Blue Lock",
+        "rareza": "Raro",
+        "estrellas": "★★",
+        "puntos": 3,
+        "valor_venta": 2500,
+        "imagen": "https://i.imgur.com/IsagiRare.png",
+        "descripcion": "Un delantero que busca destruir el fútbol tradicional para convertirse en el egoísta definitivo de Blue Lock.",
+        "visuales": ["⚽  [🏃‍♂️] ⚽\n  ( 🧩_🧩 )  < *¡Puedo ver las piezas del rompecabezas!*"]
+    },
+    "Megumi Fushiguro": {
+        "serie": "Jujutsu Kaisen",
+        "rareza": "Raro",
+        "estrellas": "★★",
+        "puntos": 3,
+        "valor_venta": 2500,
+        "imagen": "https://i.imgur.com/MegumiRare.png",
+        "descripcion": "Chamán de primer grado que utiliza la técnica de las Diez Sombras para invocar Shikigamis.",
+        "visuales": ["🐺  [👥] 🐺\n  (  🦹‍♂️_🦹‍♂️ )  < *¡Furia del Tigre y el Toro!*"]
+    },
+
+    #==================================================
+    # Personajes de anime/manga | 1 estrella | ★
+    #==================================================
 
     "Suika": {
         "serie": "Dr. Stone",
@@ -243,67 +318,6 @@ CATALOGO_PERSONAJES = {
         "imagen": "https://i.imgur.com/RigurdGoblin.png",
         "descripcion": "El leal líder de los Goblins que pasó de ser un anciano débil a un musculoso sub-líder tras recibir un nombre de Rimuru.",
         "visuales": ["🍃  [💪] 🍃\n🧌 (🔥_🔥) ✨   < *¡RIMURU-SAMA ES NUESTRO SUPREMO LÍDER! ¡KUAJAAAA!*"]
-    },
-
-    "Rimuru Tempest": {
-        "serie": "Tensura",
-        "rareza": "Legendario",
-        "estrellas": "★★★★",
-        "puntos": 10,
-        "valor_venta": 15000,
-        "imagen": "8.jpeg",
-        "descripcion": "El fundador y rey de la Federación Jura Tempest. Un Slime extrañamente poderoso con la habilidad de devorar y copiar habilidades.",
-        "visuales": ["🔹  [🔵] 🔹\n  ( • ω • )  < *¡Hola!*", "⚔️  [👤] ⚔️\n  空 (🔥_🔥) 斬  < *¡Forma Humana!*"]
-    },
-    "Gojo Satoru": {
-        "serie": "Jujutsu Kaisen",
-        "rareza": "Legendario",
-        "estrellas": "★★★★",
-        "puntos": 10,
-        "valor_venta": 15000,
-        "imagen": "https://i.imgur.com/GojoLegendary.png",
-        "descripcion": "El chamán más fuerte del mundo. Poseedor de los Seis Ojos y la técnica de Infinito. Nadie puede tocarlo.",
-        "visuales": ["👁️  [🕶️] 👁️\n  (  ͡° ͜ʖ ͡° )  < *No te preocupes, soy el más fuerte.*"]
-    },
-    "Ben Tennyson": {
-        "serie": "Ben 10",
-        "rareza": "Épico",
-        "estrellas": "★★★",
-        "puntos": 5,
-        "valor_venta": 6000,
-        "imagen": "https://i.imgur.com/Ben10Epic.png",
-        "descripcion": "Un chico normal de 10 años que encontró un reloj alienígena intergaláctico. ¡Es hora de ser héroe!",
-        "visuales": ["⌚  [👽] ⌚\n  ( 🟢_🟢 )  < *¡Omnitrix activado!*"]
-    },
-    "Cid Kagenou": {
-        "serie": "The Eminence in Shadow",
-        "rareza": "Épico",
-        "estrellas": "★★★",
-        "puntos": 5,
-        "valor_venta": 6000,
-        "imagen": "https://i.imgur.com/CidEpic.png",
-        "descripcion": "Líder de Shadow Garden. No le interesa ser el héroe ni el villano, él opera desde las sombras.",
-        "visuales": ["⬛  [🧥] ⬛\n  (  👁️_👁️ )  < *I am... Atomic.*"]
-    },
-    "Isagi Yoichi": {
-        "serie": "Blue Lock",
-        "rareza": "Raro",
-        "estrellas": "★★",
-        "puntos": 3,
-        "valor_venta": 2500,
-        "imagen": "https://i.imgur.com/IsagiRare.png",
-        "descripcion": "Un delantero que busca destruir el fútbol tradicional para convertirse en el egoísta definitivo de Blue Lock.",
-        "visuales": ["⚽  [🏃‍♂️] ⚽\n  ( 🧩_🧩 )  < *¡Puedo ver las piezas del rompecabezas!*"]
-    },
-    "Megumi Fushiguro": {
-        "serie": "Jujutsu Kaisen",
-        "rareza": "Raro",
-        "estrellas": "★★",
-        "puntos": 3,
-        "valor_venta": 2500,
-        "imagen": "https://i.imgur.com/MegumiRare.png",
-        "descripcion": "Chamán de primer grado que utiliza la técnica de las Diez Sombras para invocar Shikigamis.",
-        "visuales": ["🐺  [👥] 🐺\n  (  🦹‍♂️_🦹‍♂️ )  < *¡Furia del Tigre y el Toro!*"]
     },
     "Fuego": {
         "serie": "Ben 10",
