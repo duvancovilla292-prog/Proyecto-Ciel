@@ -141,7 +141,7 @@ async function iniciarBot() {
         // ==========================================
         // COMANDOS RÁPIDOS DE ENCENDIDO / APAGADO
         // ==========================================
-        // console.log(`💬 [MENSAJE] De: ${pushName} | ID: ${sender} | Chat: ${chatJid} | Texto: "${texto}"`);
+        //console.log(`💬 [MENSAJE] De: ${pushName} | ID: ${sender} | Chat: ${chatJid} | Texto: "${texto}"`);
         if (texto === '#on' || texto === '#off') {
             
             const ADMINS_FIJOS = [
