@@ -1,0 +1,61 @@
+# ==========================================
+# 🔐 Sesión de WhatsApp (da acceso total a la cuenta)
+# ==========================================
+sesion_whatsapp/
+auth_info*/
+
+# ==========================================
+# 🔑 Credenciales y variables de entorno
+# ==========================================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.*
+
+# ==========================================
+# 📦 Dependencias
+# ==========================================
+node_modules/
+venv/
+.venv/
+env/
+
+# ==========================================
+# 🐍 Python
+# ==========================================
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# ==========================================
+# 📥 Descargas temporales generadas por el bot (descargador.py)
+# (las imágenes y videos de reacciones SÍ se suben)
+# ==========================================
+imagenes/descarga_*
+
+# ==========================================
+# 👤 Datos locales de usuarios (ahora viven en MongoDB Atlas)
+# ==========================================
+database.json
+economia.json
+chats_activos.json
+
+# ==========================================
+# 📝 Logs y archivos de procesos
+# ==========================================
+*.log
+logs/
+nohup.out
+.pm2/
+
+# ==========================================
+# 💻 Sistema operativo y editores
+# ==========================================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
