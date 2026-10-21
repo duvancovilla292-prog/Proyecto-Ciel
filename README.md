@@ -10,8 +10,9 @@
 3. [Explicación Detallada de Archivos](#-explicación-detallada-de-archivos)
 4. [Relación e Interconexión entre Módulos](#-relación-e-interconexión-entre-módulos)
 5. [Método de Instalación y Despliegue](#-método-de-instalación-y-despliegue)
-6. [Solución de Problemas](#️-solución-de-problemas)
-7. [Recomendaciones de Seguridad](#-recomendaciones-de-seguridad)
+6. [Alternativas sin `sudo`](#-alternativas-sin-permisos-de-administrador-sin-sudo)
+7. [Solución de Problemas](#️-solución-de-problemas)
+8. [Recomendaciones de Seguridad](#-recomendaciones-de-seguridad)
 
 ---
 
@@ -219,6 +220,74 @@ Ver los logs: `docker logs -f ciel-bot`.
 
 ---
 
+## 🔓 Alternativas sin permisos de administrador (sin `sudo`)
+
+Si usas un computador compartido, un hosting o un entorno donde no puedes ejecutar `sudo`, todo se puede instalar **dentro de tu carpeta de usuario**.
+
+### Node.js sin `sudo` (con nvm)
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+source ~/.bashrc          # o abre una terminal nueva
+nvm install 20
+nvm use 20
+```
+Se instala en `~/.nvm`, así que `npm install` nunca pedirá permisos. **No uses `npm install -g`**: todas las dependencias del proyecto se instalan en local con `npm install`.
+
+### Python sin `sudo`
+* Si `python3` ya está instalado, el entorno virtual del Paso 3 **no requiere administrador**.
+* Si `python3 -m venv` falla con *"ensurepip is not available"* (en Debian/Ubuntu necesita el paquete `python3-venv`, que sí pide `sudo`), usa `virtualenv`:
+  ```bash
+  python3 -m pip install --user virtualenv
+  python3 -m virtualenv venv
+  source venv/bin/activate
+  pip install -r requirements.txt
+  ```
+* Si no existe Python, instala [Miniforge](https://github.com/conda-forge/miniforge) (se instala en tu carpeta de usuario) y crea el entorno con `conda create -n ciel python=3.12`.
+
+### FFmpeg sin `sudo`
+**Opción A (la más simple): reutilizar el FFmpeg que ya trae Node.** Al ejecutar `npm install` se descarga el paquete `ffmpeg-static`. Solo falta agregarlo al `PATH` antes de iniciar el bot:
+```bash
+export PATH="$PWD/node_modules/ffmpeg-static:$PATH"
+ffmpeg -version     # debe responder
+npm start
+```
+Como Python se ejecuta desde Node, hereda ese `PATH` y `yt-dlp` encuentra FFmpeg.
+
+**Opción B: binario estático en tu carpeta personal (Linux).**
+```bash
+mkdir -p ~/bin && cd ~/bin
+# Descarga una build estática de FFmpeg (por ejemplo desde johnvansickle.com/ffmpeg),
+# descomprímela y copia el ejecutable `ffmpeg` a ~/bin
+export PATH="$HOME/bin:$PATH"
+```
+Para que sea permanente, agrega la línea `export PATH=...` a tu `~/.bashrc`.
+
+### Mantener el bot encendido sin `sudo` ni `systemd`
+```bash
+# Con nohup (viene en cualquier Linux)
+nohup npm start > bot.log 2>&1 &
+tail -f bot.log          # ver los logs
+
+# O con PM2 instalado en local (sin -g)
+npm install pm2
+npx pm2 start index.js --name ciel-bot
+npx pm2 logs ciel-bot
+```
+Activa el entorno virtual (y el `PATH` de FFmpeg) **antes** de lanzar cualquiera de los dos.
+
+### Contenedores sin `sudo`
+Si Docker te exige `sudo`, usa **Podman** en modo *rootless*: acepta los mismos comandos del Paso 10 cambiando `docker` por `podman`.
+```bash
+podman build -t ciel-bot .
+podman run -d --name ciel-bot -v "$(pwd)/sesion_whatsapp:/app/sesion_whatsapp" ciel-bot
+```
+
+### Sin computador propio o sin acceso al sistema
+* **Android con Termux**: no necesita root ni `sudo`. Usa `pkg install nodejs python ffmpeg git` y sigue los mismos pasos.
+* **Plataformas en la nube que despliegan desde un `Dockerfile`**: no necesitas administrar el servidor. Asegúrate de que ofrezcan un **volumen persistente** para la carpeta `sesion_whatsapp/`; si no, tendrás que escanear el QR en cada reinicio.
+
+---
+
 ## 🛠️ Solución de Problemas
 
 | Problema | Causa probable | Solución |
@@ -227,8 +296,9 @@ Ver los logs: `docker logs -f ciel-bot`.
 | `python3: command not found` | Python no está en el PATH (Windows) | Usa WSL o Docker |
 | `Error crítico de conexión` (MongoDB) | IP no permitida o URI incorrecta | Revisa **Network Access** en Atlas y que `MONGO_URI` sea igual en `index.js` y `main.py` |
 | El bot no responde a nada | El chat no está activado | Envía `#on` desde el número propietario |
-| `ACCESO DENEGADO` al usar `#on` | Tu número no está en `ADMINS_FIJOS` | Ver Paso 7 |
+| `ACCESO DENEGADO` al usar `#on` | Tu número no está en `ADMINS_FIJOS` | Ver Paso 7 o activa el chat sin `#on` ([alternativas](#-alternativas-para-activar-el-bot-sin-on-sin-comandos-de-admin)) |
 | `Sesión cerrada` en `qr.js` | Sesión inválida | Borra la carpeta `sesion_whatsapp/` y repite el Paso 8 |
+| `EACCES: permission denied` en `npm` | Node instalado a nivel de sistema | No uses `sudo`: instala Node con nvm (ver [alternativas sin `sudo`](#-alternativas-sin-permisos-de-administrador-sin-sudo)) |
 | Fallan `#play`, `#mp4`, `#tiktok` | FFmpeg ausente o `yt-dlp` desactualizado | Instala FFmpeg y ejecuta `pip install -U yt-dlp` |
 | `#ciel` responde "Mente Saturada" | Cuota gratuita de Gemini agotada (429) | Espera unos segundos o revisa tu API Key |
 
