@@ -523,12 +523,12 @@ async function iniciarBot() {
                     return;
                 }
 
-                const rutaArchivo = path.join(__dirname, 'imagenes', nombreMultimedia);
+                // Las descargas (#play, #mp4, #tiktok...) viven en 'descargas'; las reacciones y personajes en 'imagenes'
+                const esDescarga = nombreMultimedia.startsWith('descarga_');
+                const rutaArchivo = path.join(__dirname, esDescarga ? 'descargas' : 'imagenes', nombreMultimedia);
 
                 if (fs.existsSync(rutaArchivo)) {
                     if (nombreMultimedia.endsWith('.mp4')) {
-                        const esDescarga = nombreMultimedia.includes('descarga');
-
                         sock.sendMessage(chatJid, {
                             video: fs.readFileSync(rutaArchivo),
                             caption: mensajeTexto,

@@ -2,8 +2,9 @@ import os
 import sys
 import yt_dlp
 
-CARPETA_IMAGENES = os.path.join(os.path.dirname(__file__), 'imagenes')
-os.makedirs(CARPETA_IMAGENES, exist_ok=True)
+# Aquí se guardan las descargas (videos y audios); se crea sola si no existe
+CARPETA_DESCARGAS = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'descargas')
+os.makedirs(CARPETA_DESCARGAS, exist_ok=True)
 
 # YouTube exige un entorno JavaScript para resolver sus desafíos: usamos Node, que ya tienes instalado
 OPCIONES_COMUNES = {'js_runtimes': {'node': {}}}
@@ -18,7 +19,7 @@ def descargar_youtube(args, es_audio=False):
     if not args:
         return "《✧》Debes proporcionar un enlace de YouTube o el nombre de la canción.", None
 
-    archivo_salida = os.path.join(CARPETA_IMAGENES, 'descarga_yt.mp3' if es_audio else 'descarga_yt.mp4')
+    archivo_salida = os.path.join(CARPETA_DESCARGAS, 'descarga_yt.mp3' if es_audio else 'descarga_yt.mp4')
     
     if os.path.exists(archivo_salida): 
         os.remove(archivo_salida)
@@ -59,7 +60,7 @@ def descargar_tiktok(link, pushName):
     if not link or "tiktok.com" not in link:
         return "《✧》Por favor, proporciona un enlace válido de TikTok.", None
 
-    archivo_salida = os.path.join(CARPETA_IMAGENES, 'descarga_tiktok.mp4')
+    archivo_salida = os.path.join(CARPETA_DESCARGAS, 'descarga_tiktok.mp4')
     if os.path.exists(archivo_salida): 
         os.remove(archivo_salida)
 
@@ -85,7 +86,7 @@ def descargar_redes_sociales(link):
     if not link:
         return "《✧》Envía el enlace del video o Reel que deseas descargar.", None
 
-    archivo_salida = os.path.join(CARPETA_IMAGENES, 'descarga_redes.mp4')
+    archivo_salida = os.path.join(CARPETA_DESCARGAS, 'descarga_redes.mp4')
     if os.path.exists(archivo_salida): 
         os.remove(archivo_salida)
 
