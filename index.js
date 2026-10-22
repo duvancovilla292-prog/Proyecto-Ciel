@@ -6,6 +6,7 @@ const path = require('path');
 const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 const admin = require('firebase-admin');
 const { correoQRConfigurado, enviarQRPorCorreo, reiniciarContadorQR } = require('./correoQR');
+const { elegirMetodoVinculacion, obtenerMetodoVinculacion, leerLinea } = require('./vinculacion');
 
 // FFmpeg incluido en el proyecto (ffmpeg-static): también lo ve Python (yt-dlp) sin instalar nada con sudo
 const rutaFfmpeg = require('ffmpeg-static');
@@ -70,18 +71,6 @@ function leerOculto(pregunta) {
             }
         };
         stdin.on('data', alRecibir);
-    });
-}
-
-// Lee una línea visible (para datos que no son secretos, como la ruta de un archivo)
-function leerLinea(pregunta) {
-    const readline = require('readline');
-    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-    return new Promise((resolve) => {
-        rl.question(pregunta, (respuesta) => {
-            rl.close();
-            resolve(respuesta.trim());
-        });
     });
 }
 
@@ -255,6 +244,11 @@ async function iniciarBot() {
     await configurarCredenciales();
 
     const { state, saveCreds } = await useMultiFileAuthState('sesion_whatsapp');
+
+    // Sin sesión vinculada: elegir código o QR (con terminal pregunta; sin terminal asume código)
+    if (!state.creds.me) {
+        await elegirMetodoVinculacion();
+    }
     
     await conectarBaseDeDatos();
     let chatsActivos = await cargarChats();
@@ -560,21 +554,21 @@ async function iniciarBot() {
         });
     });
 
-    // Si defines WA_NUMERO (con código de país, ej. 573001234567) se usa un código de 8 caracteres en vez del QR
-    const numeroVinculacion = (process.env.WA_NUMERO || '').replace(/\D/g, '');
     let codigoSolicitado = false; // un código por conexión
+    let avisoSinNumero = false;   // un aviso por conexión
 
     sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect, qr } = update;
 
         if (qr) {
-            const hayTerminal = Boolean(process.stdin.isTTY && process.stdout.isTTY);
-            if (numeroVinculacion) {
+            const metodo = obtenerMetodoVinculacion();
+
+            if (metodo.tipo === 'codigo' && metodo.numero) {
                 // Código de emparejamiento: es texto, se lee bien en los logs de Render y dura más que el QR
-                if (!codigoSolicitado && !sock.authState.creds.registered) {
+                if (!codigoSolicitado) {
                     codigoSolicitado = true;
                     try {
-                        const codigo = await sock.requestPairingCode(numeroVinculacion);
+                        const codigo = await sock.requestPairingCode(metodo.numero);
                         const bonito = codigo.match(/.{1,4}/g)?.join('-') || codigo;
                         console.log('\n🔑 [SISTEMA] Sesión no vinculada. Tu código de vinculación es:\n');
                         console.log(`        ${bonito}\n`);
@@ -584,19 +578,23 @@ async function iniciarBot() {
                         console.error('🛑 [SISTEMA] No se pudo generar el código de vinculación:', error?.message || error);
                     }
                 }
-            } else if (hayTerminal || !correoQRConfigurado()) {
-                // En tu computador (terminal real) el QR se dibuja aquí mismo
+            } else if (metodo.tipo === 'codigo') {
+                // Sin terminal y sin número: no se puede generar el código
+                if (!avisoSinNumero) {
+                    avisoSinNumero = true;
+                    console.error('🛑 [SISTEMA] Sin terminal el bot vincula con un código de 8 caracteres, pero falta tu número.');
+                    console.error('   Define la variable WA_NUMERO con tu número y código de país, sin + ni espacios (ej. 573001234567).');
+                    if (correoQRConfigurado()) console.error('   Mientras tanto, te envío el QR por correo.');
+                }
+                // Respaldo: si configuraste el correo, el QR llega como imagen
+                if (correoQRConfigurado()) await enviarQRPorCorreo(qr);
+            } else {
+                // Elegiste QR en tu terminal
                 console.log("\n✨ [SISTEMA] Sesión no vinculada. Escanea este QR (o usa 'node qr.js'):");
                 qrcode.generate(qr, { small: true });
-                if (!hayTerminal) {
-                    console.log("💡 Sin terminal el QR se ve mal. Define WA_NUMERO para usar un código de 8 caracteres, o QR_EMAIL_DESTINO y RESEND_API_KEY para recibir el QR por correo.");
-                }
-            } else {
-                // En un servidor sin terminal (Render) el QR llega como imagen a tu correo
-                await enviarQRPorCorreo(qr);
             }
         }
-        
+
         if (connection === 'close') {
             const codigoRazon = lastDisconnect?.error?.output?.statusCode;
             const mensajeError = lastDisconnect?.error?.output?.payload?.message || "Desconocido";

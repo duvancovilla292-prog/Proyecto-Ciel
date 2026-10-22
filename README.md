@@ -30,7 +30,8 @@ El proyecto combina un **cliente de WhatsApp en Node.js** (que recibe los mensaj
 📦 Proyecto-Ciel/
  ┣ 📜 index.js           # Cliente de WhatsApp (Baileys): recibe mensajes, #on/#off, stickers, #ciel (Gemini) y llama a main.py.
  ┣ 📜 qr.js              # Vinculación inicial con WhatsApp (genera el QR y guarda la sesión).
- ┣ 📧 correoQR.js        # Envía el QR por correo cuando el bot corre sin terminal (Render).
+ ┣ 🔗 vinculacion.js     # Elige cómo vincular WhatsApp: código de 8 caracteres o QR.
+ ┣ 📧 correoQR.js        # Respaldo: envía el QR por correo si en Render falta WA_NUMERO.
  ┣ 📜 main.py            # Enrutador en Python: conecta con Firestore y deriva cada comando al módulo correcto.
  ┣ 📜 economia.py        # Núcleo financiero, minijuegos y comandos globales.
  ┣ 📜 gacha.py           # Sistema de invocación, inventario, mercado y colección de personajes.
@@ -334,9 +335,17 @@ Ver los logs: `docker logs -f ciel-bot`.
 ---
 
 ### Paso 11: Vincular WhatsApp en Render (sin terminal)
-En Render no hay terminal, así que el QR dibujado en los logs se ve mal. Hay dos formas de vincular; elige una.
+**Cómo elige el bot el método** cuando WhatsApp aún no está vinculado:
 
-#### Opción A (recomendada): código de 8 caracteres
+| Dónde corre | Qué hace |
+|---|---|
+| Tu computador (con terminal) | Te pregunta si prefieres **código de 8 caracteres** o **QR**; si eliges código, te pide tu número |
+| Render / Docker sin `-it` (sin terminal) | **Asume código** y toma tu número de la variable `WA_NUMERO` |
+| Cualquier lugar con `WA_NUMERO` definida | Usa el código directamente, sin preguntar |
+
+En Render no hay terminal y el QR dibujado en los logs se ve mal, por eso allí se usa el código.
+
+#### Código de 8 caracteres (el método de Render)
 Se lee como texto en los logs, no necesita correo y dura más que el QR.
 
 1. En Render → **Environment Variables** agrega tu número de WhatsApp **con código de país y sin `+` ni espacios**:
@@ -351,10 +360,12 @@ Se lee como texto en los logs, no necesita correo y dura más que el QR.
    ```
 3. En el celular: **WhatsApp → Ajustes → Dispositivos vinculados → Vincular un dispositivo → "Vincular con el número de teléfono"** y escribe el código.
 
-Si el código caduca, el bot genera uno nuevo cuando reconecta (unos minutos después). Con `WA_NUMERO` definido ya no se muestra el QR; también funciona en tu computador.
+Si el código caduca, el bot genera uno nuevo cuando reconecta (unos minutos después). Si en Render olvidas `WA_NUMERO`, el bot lo avisa en los logs (`falta tu número`).
 
-#### Opción B: el QR llega por correo
-Si el bot no tiene terminal y están definidas las dos variables de abajo, **envía el QR como imagen a tu correo**. (En tu computador, con terminal, se sigue dibujando en pantalla.)
+En tu computador también puedes definir `WA_NUMERO` para no responder la pregunta cada vez que no haya sesión.
+
+#### Respaldo opcional: el QR llega por correo
+Si en Render no defines `WA_NUMERO` pero sí las dos variables de abajo, el bot **envía el QR como imagen a tu correo** en lugar de un código.
 
 1. Crea una cuenta gratis en [resend.com](https://resend.com) con **el correo donde quieres recibir el QR** y genera una API Key en **API Keys**.
 2. En Render → **Environment Variables** agrega:
