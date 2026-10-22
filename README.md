@@ -1,3 +1,4 @@
+./cielbot-7e2c9-firebase-adminsdk-fbsvc-8bcf3e529b.json
 # 🌟 Ciel Bot Místico - Documentación y Guía del Repositorio
 
 > **Bot modular de automatización y entretenimiento para WhatsApp** impulsado con economía virtual, sistema Gacha de personajes de anime/ciencia, reacciones multimedia interactivas y motor de descargas de redes sociales.
