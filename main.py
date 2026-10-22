@@ -156,9 +156,10 @@ def enrutador_principal(user_id, nombre_remitente, texto_mensaje, chat_id):
         guardar_grupo_db(chat_id, usuarios_chat)
         return respuesta
 
-    # Para el perfil que requería toda la estructura json, le armamos un diccionario compatible en caliente
-    db_compatible_perfil = {chat_id: usuarios_chat}
-    respuesta = manejar_perfil(db_compatible_perfil, user_id, comando, args_lista, ahora)
+    # perfil.py espera un diccionario {id_de_usuario: datos}, que es justo 'usuarios_chat'.
+    # (Antes se le pasaba {chat_id: usuarios_chat}: solo funcionaba por casualidad cuando el id del usuario
+    #  coincidía con el del chat; en grupos, o cuando escribe el dueño, lanzaba KeyError.)
+    respuesta = manejar_perfil(usuarios_chat, user_id, comando, args_lista, ahora)
     if respuesta:
         guardar_grupo_db(chat_id, usuarios_chat)
         print(respuesta)
