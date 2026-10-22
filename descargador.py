@@ -1,4 +1,5 @@
 import os
+import sys
 import yt_dlp
 
 CARPETA_IMAGENES = os.path.join(os.path.dirname(__file__), 'imagenes')
@@ -75,6 +76,7 @@ def descargar_tiktok(link, pushName):
             ydl.download([link])
         return f"👤 *TikTok solicitado por:* {pushName}", "descarga_tiktok.mp4"
     except Exception as e:
+        print(f"[TIKTOK] {e}", file=sys.stderr)  # el motivo real aparece en la consola del bot
         return "❌ No logré extraer ese video de TikTok. Puede que sea privado.", None
 
 
@@ -100,4 +102,5 @@ def descargar_redes_sociales(link):
             ydl.download([link])
         return f"🎥 Aquí tienes tu video solicitado", "descarga_redes.mp4"
     except Exception as e:
+        print(f"[REDES] {e}", file=sys.stderr)  # el motivo real aparece en la consola del bot
         return "❌ Error al descargar de la red social. Verifica que el enlace sea público o válido.", None
