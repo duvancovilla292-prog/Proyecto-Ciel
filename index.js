@@ -220,7 +220,7 @@ async function cargarChats() {
         return chats;
     } catch (error) {
         console.error("Error al cargar chats desde Firestore:", error);
-        return {};
+        return null; // null = falló la lectura: se conserva la lista que ya estaba en memoria
     }
 }
 
@@ -240,6 +240,24 @@ async function guardarChat(chatJid, estado) {
 
 const cooldownXP = new Set();
 
+// WhatsApp envuelve algunos mensajes (chats con mensajes temporales, "ver una vez"...).
+// Se desenvuelven para leer el contenido real y no perder el texto del comando.
+function desenvolverMensaje(contenido) {
+    let actual = contenido || {};
+    for (let i = 0; i < 5; i++) {
+        const interno = actual.ephemeralMessage?.message
+            || actual.viewOnceMessage?.message
+            || actual.viewOnceMessageV2?.message
+            || actual.documentWithCaptionMessage?.message;
+        if (!interno) break;
+        actual = interno;
+    }
+    return actual;
+}
+
+// Si pones CHATS_PRIVADOS_ACTIVOS=true, el bot responde en chats 1 a 1 sin necesidad de #on
+const CHATS_PRIVADOS_ACTIVOS = String(process.env.CHATS_PRIVADOS_ACTIVOS || '').toLowerCase() === 'true';
+
 async function iniciarBot() {
     await configurarCredenciales();
 
@@ -251,7 +269,8 @@ async function iniciarBot() {
     }
     
     await conectarBaseDeDatos();
-    let chatsActivos = await cargarChats();
+    let chatsActivos = (await cargarChats()) || {};
+    let ultimaCargaChats = Date.now();
 
     // Sin la versión actual de WhatsApp Web el servidor rechaza la conexión (error 405)
     let version;
@@ -280,40 +299,79 @@ async function iniciarBot() {
     sock.ev.on('creds.update', saveCreds);
 
     sock.ev.on('messages.upsert', async (m) => {
-        const msg = m.messages[0];
+        // WhatsApp puede entregar varios mensajes juntos (p. ej. al reconectar): se atienden todos
+        for (const mensaje of m.messages) {
+            try {
+                await procesarMensaje(mensaje);
+            } catch (error) {
+                console.error('Error procesando un mensaje:', error);
+            }
+        }
+    });
+
+    async function procesarMensaje(msg) {
         if (!msg || !msg.message) return;
 
         const chatJid = msg.key.remoteJid;
+        if (!chatJid || chatJid === 'status@broadcast') return;
+
+        const chatJidAlt = msg.key.remoteJidAlt; // WhatsApp migra a ids tipo LID: un mismo chat puede llegar con dos formatos
+        const esGrupo = chatJid.endsWith('@g.us');
         const sender = msg.key.participant || chatJid;
         const pushName = msg.pushName || "Usuario";
 
-        const tipoMensaje = Object.keys(msg.message)[0];
-        let texto = "";
+        // El primer campo del mensaje no siempre es el texto (a veces es 'messageContextInfo'),
+        // así que se busca el texto (o el pie de foto) en todos los lugares posibles
+        const contenido = desenvolverMensaje(msg.message);
+        let texto = contenido.conversation
+            || contenido.extendedTextMessage?.text
+            || contenido.imageMessage?.caption
+            || contenido.videoMessage?.caption
+            || contenido.documentMessage?.caption
+            || "";
+        texto = texto.trim();
 
-        if (tipoMensaje === 'conversation') {
-            texto = msg.message.conversation;
-        } else if (tipoMensaje === 'extendedTextMessage') {
-            texto = msg.message.extendedTextMessage.text;
+        const contextInfo = contenido.extendedTextMessage?.contextInfo
+            || contenido.imageMessage?.contextInfo
+            || contenido.videoMessage?.contextInfo;
+        const citoMensaje = contextInfo?.quotedMessage;
+
+        const esComando = texto.startsWith('#');
+        const textoCmd = texto.toLowerCase();
+
+        // Muestra en la terminal (o en los logs de Render) cada mensaje dirigido al bot
+        if (esComando) {
+            console.log(`💬 [COMANDO] ${pushName} | ${esGrupo ? 'grupo' : 'privado'} | ${msg.key.fromMe ? 'yo' : 'otro'} | ${chatJid}${chatJidAlt ? ` (alt: ${chatJidAlt})` : ''} | "${texto.slice(0, 150)}"`);
         }
 
-        const citoMensaje = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+        // La lista de chats activos se guarda en memoria y se refresca cada 60 s (leer Firestore en cada mensaje gasta la cuota gratis)
+        if (Date.now() - ultimaCargaChats > 60000) {
+            ultimaCargaChats = Date.now();
+            const cargados = await cargarChats();
+            if (cargados) chatsActivos = cargados;
+        }
 
-        chatsActivos = await cargarChats();
+        const chatActivo = () => Boolean(
+            chatsActivos[chatJid]
+            || (chatJidAlt && chatsActivos[chatJidAlt])
+            || (!esGrupo && CHATS_PRIVADOS_ACTIVOS)
+        );
 
         // ==========================================
         // COMANDOS RÁPIDOS DE ENCENDIDO / APAGADO
         // ==========================================
         //console.log(`💬 [MENSAJE] De: ${pushName} | ID: ${sender} | Chat: ${chatJid} | Texto: "${texto}"`);
-        if (texto === '#on' || texto === '#off') {
+        if (textoCmd === '#on' || textoCmd === '#off') {
             
             const ADMINS_FIJOS = [
                 "573228595906",
                 "3228595906"
             ]; 
         
-            const numeroSender = sender ? sender.split(':')[0].split('@')[0] : "";
+            // Se revisan también los ids alternativos (LID ↔ número) por si el número del admin llega en el otro formato
+            const idsSender = [sender, msg.key.participantAlt, esGrupo ? null : chatJidAlt].filter(Boolean);
             const esEnviadoPorMi = msg.key && msg.key.fromMe === true;
-            const esAdminEnGrupo = ADMINS_FIJOS.includes(numeroSender);
+            const esAdminEnGrupo = idsSender.some(id => ADMINS_FIJOS.includes(id.split(':')[0].split('@')[0]));
         
             if (!esEnviadoPorMi && !esAdminEnGrupo) {
                 await sock.sendMessage(chatJid, { 
@@ -322,24 +380,35 @@ async function iniciarBot() {
                 return; 
             }
         
-            if (texto === '#on') {
+            if (textoCmd === '#on') {
                 chatsActivos[chatJid] = true;
                 await guardarChat(chatJid, true);
+                if (chatJidAlt) {
+                    chatsActivos[chatJidAlt] = true;
+                    await guardarChat(chatJidAlt, true);
+                }
                 await sock.sendMessage(chatJid, { text: "✨ *¡Bot activado con éxito!* Las funciones místicas están listas para este chat." }, { quoted: msg });
                 return;
             }
         
-            if (texto === '#off') {
-                if (chatsActivos[chatJid]) {
-                    delete chatsActivos[chatJid];
-                    await guardarChat(chatJid, false);
+            if (textoCmd === '#off') {
+                for (const id of [chatJid, chatJidAlt].filter(Boolean)) {
+                    if (chatsActivos[id]) {
+                        delete chatsActivos[id];
+                        await guardarChat(id, false);
+                    }
                 }
                 await sock.sendMessage(chatJid, { text: "💤 *¡Bot apagado!* Me iré a dormir en este chat hasta que vuelvas a usar `#on`." }, { quoted: msg });
                 return;
             }
         }
 
-        if (!chatsActivos[chatJid]) return;
+        if (!chatActivo()) {
+            if (esComando) {
+                console.log(`⏭️ [IGNORADO] Chat no activado: ${chatJid}. Escribe #on ahí${esGrupo ? '' : ' (o define CHATS_PRIVADOS_ACTIVOS=true para que los chats 1 a 1 no lo necesiten)'}.`);
+            }
+            return;
+        }
 
         // ==========================================
         // ASIGNACIÓN Y GESTIÓN DE XP (SISTEMA DE EXPERIENCIA)
@@ -389,9 +458,9 @@ async function iniciarBot() {
             let mensajeMultimedia = null;
             let tipoMime = '';
 
-            if (msg.message?.imageMessage || msg.message?.videoMessage) {
-                mensajeMultimedia = msg.message?.imageMessage || msg.message?.videoMessage;
-                tipoMime = msg.message?.imageMessage ? 'image' : 'video';
+            if (contenido.imageMessage || contenido.videoMessage) {
+                mensajeMultimedia = contenido.imageMessage || contenido.videoMessage;
+                tipoMime = contenido.imageMessage ? 'image' : 'video';
             } else if (citoMensaje?.imageMessage || citoMensaje?.videoMessage) {
                 mensajeMultimedia = citoMensaje.imageMessage || citoMensaje.videoMessage;
                 tipoMime = citoMensaje.imageMessage ? 'image' : 'video';
@@ -503,6 +572,9 @@ async function iniciarBot() {
             }
             
             const respuestaRaw = stdout.trim();
+            console.log(respuestaRaw
+                ? `📤 [RESPUESTA] ${comando} → ${respuestaRaw.split('|')[0].replace(/\s+/g, ' ').slice(0, 80)}`
+                : `📭 [SIN RESPUESTA] ${comando}: Python no devolvió nada`);
             if (!respuestaRaw) return;
 
             // ==========================================
@@ -552,7 +624,7 @@ async function iniciarBot() {
                 sock.sendMessage(chatJid, { text: respuestaRaw }, { quoted: msg });
             }
         });
-    });
+    }
 
     let codigoSolicitado = false; // un código por conexión
     let avisoSinNumero = false;   // un aviso por conexión

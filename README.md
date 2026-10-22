@@ -305,6 +305,19 @@ Si quieres que cualquier admin de WhatsApp del grupo pueda usarlos (no solo el p
 
 ---
 
+#### 👀 Ver qué está pasando (terminal o logs de Render)
+Cada mensaje que empieza con `#` se muestra en la terminal (o en los **Logs** de Render), junto con lo que responde el bot:
+
+```text
+💬 [COMANDO] Ana | privado | otro | 573001234567@s.whatsapp.net | "#perfil"
+📤 [RESPUESTA] #perfil → 👤 Perfil de Ana ...
+⏭️ [IGNORADO] Chat no activado: 120363000000000000@g.us. Escribe #on ahí.
+📭 [SIN RESPUESTA] #xyz: Python no devolvió nada
+```
+
+* `grupo` / `privado` indica el tipo de chat y `yo` / `otro` quién lo escribió.
+* **Chats 1 a 1 sin `#on`:** define la variable de entorno `CHATS_PRIVADOS_ACTIVOS=true` (en Render, en *Environment Variables*) y el bot responderá en todos los chats privados. Los grupos siguen necesitando `#on`. Con esa variable cualquiera que te escriba por privado puede usar el bot (y gastar tu cuota de Gemini).
+
 ### Paso 10: Alternativa con Docker
 El `Dockerfile` ya incluye Node 20, Python 3 y FFmpeg.
 ```bash
@@ -465,6 +478,7 @@ podman run -it --name ciel-bot -v "$(pwd)/sesion_whatsapp:/app/sesion_whatsapp" 
 | `qr.js` no muestra el QR o se queda reintentando | Versión de WhatsApp Web desactualizada (error 405), sin internet o sesión dañada | Ejecuta `npm install @whiskeysockets/baileys@latest`, luego `node qr.js --reset`; si el QR no se ve bien usa `node qr.js TUNUMERO` |
 | En Render no aparece el código de vinculación | Falta `WA_NUMERO`, el número lleva `+`/espacios o no tiene código de país | Usa solo dígitos con código de país (ej. `573001234567`) y busca `[SISTEMA]` en los logs |
 | En Render no llega el correo con el QR | Faltan `QR_EMAIL_DESTINO` o `RESEND_API_KEY`, o el destino no es el correo de tu cuenta de Resend | Revisa los logs: la línea `[CORREO-QR]` muestra la respuesta de Resend (ej. `403`) |
+| El bot no responde en un chat 1 a 1 | El chat no está activado (solo se activa con `#on`) | En los logs aparece `⏭️ [IGNORADO] Chat no activado`. Escribe `#on` en ese chat o define `CHATS_PRIVADOS_ACTIVOS=true` para que los chats 1 a 1 funcionen sin `#on` |
 | `Sesión cerrada` en `qr.js` | Sesión inválida | `qr.js` ya la borra solo; si persiste, `node qr.js --reset` |
 | `EACCES: permission denied` en `npm` | Node instalado a nivel de sistema | No uses `sudo`: instala Node con nvm (ver [alternativas sin `sudo`](#-alternativas-sin-permisos-de-administrador-sin-sudo)) |
 | Fallan `#play`, `#mp4`, `#tiktok` | FFmpeg ausente o `yt-dlp` desactualizado | Instala FFmpeg y ejecuta `pip install -U yt-dlp` |
