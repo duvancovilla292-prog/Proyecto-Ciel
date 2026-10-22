@@ -4,6 +4,9 @@ import yt_dlp
 CARPETA_IMAGENES = os.path.join(os.path.dirname(__file__), 'imagenes')
 os.makedirs(CARPETA_IMAGENES, exist_ok=True)
 
+# YouTube exige un entorno JavaScript para resolver sus desafíos: usamos Node, que ya tienes instalado
+OPCIONES_COMUNES = {'js_runtimes': {'node': {}}}
+
 class MiLoggerMudo:
     def debug(self, msg): pass
     def warning(self, msg): pass
@@ -41,7 +44,7 @@ def descargar_youtube(args, es_audio=False):
         url_descarga = args
 
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        with yt_dlp.YoutubeDL({**OPCIONES_COMUNES, **ydl_opts}) as ydl:
             ydl.download([url_descarga])
         
         nombre_final = 'descarga_yt.mp3' if es_audio else 'descarga_yt.mp4'
@@ -68,7 +71,7 @@ def descargar_tiktok(link, pushName):
     }
 
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        with yt_dlp.YoutubeDL({**OPCIONES_COMUNES, **ydl_opts}) as ydl:
             ydl.download([link])
         return f"👤 *TikTok solicitado por:* {pushName}", "descarga_tiktok.mp4"
     except Exception as e:
@@ -93,7 +96,7 @@ def descargar_redes_sociales(link):
     }
 
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        with yt_dlp.YoutubeDL({**OPCIONES_COMUNES, **ydl_opts}) as ydl:
             ydl.download([link])
         return f"🎥 Aquí tienes tu video solicitado", "descarga_redes.mp4"
     except Exception as e:
