@@ -15,7 +15,7 @@ WORKDIR /app
 
 # 4. Copiar e instalar dependencias de Node.js
 COPY package*.json ./
-RUN npm install
+RUN npm ci --omit=dev
 
 # 5. Copiar e instalar dependencias de Python
 COPY requirements.txt ./

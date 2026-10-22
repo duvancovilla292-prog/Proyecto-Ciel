@@ -24,13 +24,13 @@
 
 ## 📂 Estructura y Arquitectura del Repositorio
 
-El proyecto combina un **cliente de WhatsApp en Node.js** (que recibe los mensajes) con **módulos de lógica en Python** (que procesan los comandos). Los datos se guardan en **MongoDB Atlas**.
+El proyecto combina un **cliente de WhatsApp en Node.js** (que recibe los mensajes) con **módulos de lógica en Python** (que procesan los comandos). Los datos se guardan en **Firebase Firestore**.
 
 ```text
 📦 Proyecto-Ciel/
  ┣ 📜 index.js           # Cliente de WhatsApp (Baileys): recibe mensajes, #on/#off, stickers, #ciel (Gemini) y llama a main.py.
  ┣ 📜 qr.js              # Vinculación inicial con WhatsApp (genera el QR y guarda la sesión).
- ┣ 📜 main.py            # Enrutador en Python: conecta con MongoDB y deriva cada comando al módulo correcto.
+ ┣ 📜 main.py            # Enrutador en Python: conecta con Firestore y deriva cada comando al módulo correcto.
  ┣ 📜 economia.py        # Núcleo financiero, minijuegos y comandos globales.
  ┣ 📜 gacha.py           # Sistema de invocación, inventario, mercado y colección de personajes.
  ┣ 📜 anime.py           # Reacciones sociales y de rol con imágenes/videos.
@@ -39,6 +39,8 @@ El proyecto combina un **cliente de WhatsApp en Node.js** (que recibe los mensaj
  ┣ 📜 package.json       # Dependencias de Node.js (npm start → node index.js).
  ┣ 📜 requirements.txt   # Dependencias de Python.
  ┣ 🐳 Dockerfile         # Despliegue en contenedor (Node 20 + Python 3 + FFmpeg).
+ ┣ 🚫 .gitignore         # Evita subir sesión de WhatsApp, .env, clave de Firebase, node_modules, etc.
+ ┣ 🚫 .dockerignore      # Evita copiar sesión, clave de Firebase y secretos dentro de la imagen.
  ┗ 📁 imagenes/          # Recursos multimedia (personajes y reacciones).
 ```
 
@@ -100,9 +102,9 @@ graph TD
 Guía paso a paso para poner el bot en marcha desde cero.
 
 ### 📌 Cómo funciona el arranque (léelo primero)
-1. `index.js` (Node) se conecta a WhatsApp y a MongoDB.
+1. `index.js` (Node) se conecta a WhatsApp y a Firebase (Firestore).
 2. Cada mensaje que empieza con `#` se envía a Python ejecutando `python3 main.py ...`.
-3. `main.py` consulta MongoDB, ejecuta el comando y devuelve la respuesta a Node.
+3. `main.py` consulta Firestore, ejecuta el comando y devuelve la respuesta a Node.
 
 Por eso necesitas **Node.js y Python instalados a la vez**, y los dos deben poder conectarse a la **misma base de datos**.
 
@@ -113,7 +115,7 @@ Por eso necesitas **Node.js y Python instalados a la vez**, y los dos deben pode
 | Python | 3.10 o superior | Lógica de comandos (`main.py`) |
 | FFmpeg | cualquiera reciente, en el `PATH` | Convertir audio/video en `descargador.py` |
 | Git | cualquiera | Clonar el repositorio |
-| Cuenta de MongoDB Atlas | plan gratuito (M0) | Base de datos en la nube |
+| Cuenta de Google / Firebase | plan gratuito (Spark) | Base de datos Firestore en la nube |
 | Un número de WhatsApp | — | La cuenta que será el bot |
 | API Key de Google Gemini *(opcional)* | — | Solo para el comando `#ciel` |
 
@@ -140,9 +142,9 @@ source venv/bin/activate        # Linux / macOS / Termux
 
 pip install -r requirements.txt
 ```
-Esto instala `yt-dlp`, `requests`, `pymongo` y `certifi`.
+Esto instala `yt-dlp`, `requests` y `firebase-admin`.
 
-> 💡 **Importante:** como Node llama a `python3`, el entorno virtual debe estar **activado en la misma terminal** donde luego ejecutes `npm start`. Si no, verás `ModuleNotFoundError: No module named 'pymongo'`.
+> 💡 **Importante:** como Node llama a `python3`, el entorno virtual debe estar **activado en la misma terminal** donde luego ejecutes `npm start`. Si no, verás `ModuleNotFoundError: No module named 'firebase_admin'`.
 
 ### Paso 4: Instalar FFmpeg
 ```bash
@@ -155,24 +157,20 @@ brew install ffmpeg
 ```
 Comprueba con `ffmpeg -version`.
 
-### Paso 5: Crear tu base de datos en MongoDB Atlas
-1. Entra a [mongodb.com/atlas](https://www.mongodb.com/atlas) y crea un **cluster gratuito (M0)**.
-2. En **Database Access**, crea un usuario con contraseña.
-3. En **Network Access**, agrega tu IP (o `0.0.0.0/0` si el bot correrá en un servidor).
-4. En **Connect → Drivers**, copia tu cadena de conexión (`mongodb+srv://usuario:contraseña@...`).
-5. Pega **la misma cadena** en los dos archivos, en la constante `MONGO_URI`:
-   * `index.js` (cerca de la línea 17)
-   * `main.py` (cerca de la línea 17)
+> 🔓 **¿No tienes permisos de administrador?** Mira la sección [Alternativas sin `sudo`](#-alternativas-sin-permisos-de-administrador-sin-sudo) más abajo.
 
-La base de datos `BotCielDB` y sus colecciones (`sistema_economia`, `chats_activos`, `usuarios_niveles`) se crean solas la primera vez.
+### Paso 5: Crear tu base de datos en Firebase (Firestore)
+1. Entra a [console.firebase.google.com](https://console.firebase.google.com) y crea un proyecto (puedes desactivar Google Analytics).
+2. En el menú **Build → Firestore Database → Create database**. Elige una ubicación cercana y el modo **producción** (el bot usa el Admin SDK, que no depende de las reglas).
+3. Ve a **⚙️ Configuración del proyecto → Cuentas de servicio → Generar nueva clave privada**. Se descarga un archivo `.json`.
+4. Guárdalo como `firebase-key.json` en la raíz del proyecto (el `.gitignore` y el `.dockerignore` ya lo excluyen) o en cualquier carpeta fuera del repositorio. El bot te pedirá su **ruta** al iniciarlo (Paso 9).
 
-### Paso 6: Configurar Gemini *(opcional, solo para `#ciel`)*
-1. Genera una API Key gratuita en [Google AI Studio](https://aistudio.google.com/apikey).
-2. En `index.js`, pégala en esta línea (cerca de la línea 12):
-   ```js
-   const ai = new GoogleGenAI({ apiKey: "TU_API_KEY" });
-   ```
-Si lo omites, el bot funciona igual, pero `#ciel` responderá con error.
+> 🔐 **La clave JSON da acceso total a tu proyecto de Firebase: nunca la subas a GitHub ni la compartas.** La API Key de Gemini sí se escribe por terminal y vive solo en la memoria del proceso.
+
+Las colecciones (`sistema_economia`, `chats_activos`, `usuarios_niveles`) se crean solas la primera vez que el bot guarda datos.
+
+### Paso 6: Tener lista tu API Key de Gemini *(opcional, solo para `#ciel`)*
+Genera una API Key gratuita en [Google AI Studio](https://aistudio.google.com/apikey). El bot te la pedirá en la terminal al iniciar (Paso 9). Si presionas **Enter** sin escribir nada, el bot funciona igual, pero `#ciel` queda desactivado.
 
 ### Paso 7: Configurar el propietario del bot
 Los comandos `#on` y `#off` solo los puede ejecutar el **propietario**. En `index.js`, dentro del bloque `#on / #off`, cambia el arreglo `ADMINS_FIJOS` por **tu número** (con código de país, sin `+`):
@@ -182,27 +180,127 @@ const ADMINS_FIJOS = ["57TUNUMERO", "TUNUMERO"];
 Los mensajes enviados desde la propia cuenta vinculada (`fromMe`) también se aceptan.
 
 ### Paso 8: Vincular WhatsApp (se hace una sola vez)
+Hay dos formas. Usa la que prefieras:
+
+**Opción A: Código QR**
 ```bash
 node qr.js
 ```
-1. Aparecerá un **código QR** en la terminal.
+1. Aparecerá un **código QR** en la terminal (se renueva solo cada ~20 segundos).
 2. En el celular: **WhatsApp → Ajustes → Dispositivos vinculados → Vincular un dispositivo**.
-3. Escanea el QR. Al terminar verás `✅ ¡VINCULACIÓN EXITOSA CON EL TELÉFONO!`.
+3. Escanea el QR.
 
-Se crea la carpeta `sesion_whatsapp/` con tu sesión. **No la subas a GitHub ni la compartas** (da acceso total a la cuenta).
+**Opción B: Código de 8 caracteres (si el QR no se ve bien o no puedes escanearlo)**
+```bash
+node qr.js 573001234567
+```
+Cambia el número por el de la cuenta que será el bot (con código de país, sin `+`). Aparecerá un código como `ABCD-1234`. En el celular: **Dispositivos vinculados → Vincular un dispositivo → Vincular con el número de teléfono** y escribe el código.
+
+En ambos casos, al terminar verás `✅ ¡VINCULACIÓN EXITOSA CON EL TELÉFONO!`.
+
+Si quedó una sesión dañada de un intento anterior, empieza de cero con:
+```bash
+node qr.js --reset
+```
+
+Se crea la carpeta `sesion_whatsapp/` con tu sesión. **No la subas a GitHub ni la compartas** (da acceso total a la cuenta; el `.gitignore` ya la excluye).
 
 ### Paso 9: Iniciar el bot
-Con el entorno virtual activado:
+Con el entorno virtual activado, en una **terminal interactiva**:
 ```bash
 npm start
 ```
-Debes ver `🔮 [DATABASE] ¡Conexión permanente establecida con MongoDB Atlas!`.
+El bot te pedirá la ruta de la clave de Firebase (se ve al escribirla) y la API Key de Gemini (no se muestra, solo aparecen `*`):
+```text
+🔐 [CONFIG] Ingresa tus credenciales. La API Key de Gemini no se guarda en ningún archivo.
+🔥 Ruta del JSON de Firebase (cuenta de servicio): ./firebase-key.json
+🤖 Gemini API Key (Enter para omitir, desactiva #ciel): *********
+✅ [CONFIG] Credenciales cargadas. Firebase: tu-proyecto | Gemini: activado
+```
+* Pega el valor con **clic derecho / Ctrl+Shift+V** (en Termux, mantén presionado → *Pegar*) y presiona **Enter**.
+* Si el archivo no existe o no es una clave de cuenta de servicio de Firebase, te vuelve a pedir la ruta.
+* Para no escribir la ruta en cada inicio, expórtala antes: `export FIREBASE_KEY_PATH="$PWD/firebase-key.json"`. La API Key de Gemini se pide en cada reinicio (así no queda guardada).
+
+Después debes ver `🔮 [DATABASE] ¡Conexión establecida con Firebase Firestore!`.
 
 Luego, **en cada chat o grupo donde quieras usarlo**, envía:
 ```text
 #on
 ```
 Prueba con `#help`, `#work` o `#gacha`. Para apagarlo en un chat: `#off`.
+
+### 🔓 Alternativas para activar el bot sin `#on` (sin comandos de admin)
+
+El bot solo responde en los chats que estén marcados como activos en Firestore (colección `chats_activos`). `#on` es solo una forma de crear ese registro; estas son otras:
+
+#### Opción A: Activar el chat directamente en Firebase Console (sin tocar código)
+1. Averigua el ID del chat (`chatJid`). Los grupos terminan en `@g.us` y los chats privados en `@s.whatsapp.net` o `@lid`. Para verlo, quita los `//` de esta línea de `index.js` (busca `[MENSAJE]`) y envía cualquier mensaje al chat:
+   ```js
+   console.log(`💬 [MENSAJE] De: ${pushName} | ID: ${sender} | Chat: ${chatJid} | Texto: "${texto}"`);
+   ```
+2. En Firebase Console ve a **Firestore Database → Data → chats_activos → Add document**. Como *Document ID* pon el `chatJid` y agrega dos campos:
+   ```text
+   Document ID: 120363000000000000@g.us
+   chatJid  (string)  = 120363000000000000@g.us
+   activo   (boolean) = true
+   ```
+3. El bot lee la colección en cada mensaje, así que **no necesitas reiniciarlo**.
+
+Para desactivar el chat, elimina ese documento (o usa `#off`).
+
+#### Opción B: Script de activación por terminal
+Crea un archivo `activar.js` en la raíz del proyecto:
+```js
+const admin = require('firebase-admin');
+const fs = require('fs');
+
+const rutaClave = process.env.FIREBASE_KEY_PATH; // ruta del JSON de Firebase, no va en el archivo
+const chatJid = process.argv[2];
+
+if (!chatJid || !rutaClave) {
+    console.log('Uso: FIREBASE_KEY_PATH=./firebase-key.json node activar.js <chatJid>');
+    process.exit(1);
+}
+
+(async () => {
+    admin.initializeApp({ credential: admin.credential.cert(JSON.parse(fs.readFileSync(rutaClave, 'utf8'))) });
+    await admin.firestore().collection('chats_activos').doc(chatJid).set({ chatJid, activo: true });
+    console.log(`✅ Chat activado: ${chatJid}`);
+    await admin.app().delete();
+})();
+```
+Uso:
+```bash
+export FIREBASE_KEY_PATH="$PWD/firebase-key.json"
+node activar.js 120363000000000000@g.us
+```
+
+#### Opción C: Activar todos los chats automáticamente (cambio de código)
+Útil si el bot es solo para ti o para pruebas. En `index.js` busca:
+```js
+if (!chatsActivos[chatJid]) return;
+```
+y cámbialo por:
+```js
+if (process.env.ACTIVAR_TODOS !== 'true' && !chatsActivos[chatJid]) return;
+```
+Luego inicia el bot así:
+```bash
+ACTIVAR_TODOS=true npm start
+```
+> ⚠️ Con esta opción el bot responderá en **todos** los chats y grupos de la cuenta vinculada, incluidos los de otras personas.
+
+#### Opción D: Permitir `#on` / `#off` a los admins del grupo
+Si quieres que cualquier admin de WhatsApp del grupo pueda usarlos (no solo el propietario), en `index.js` agrega **dentro del bloque `#on / #off`**, antes de `if (!esEnviadoPorMi && !esAdminEnGrupo)`, la consulta de admins del grupo con `sock.groupMetadata(chatJid)` y compara el `sender` con los participantes cuyo `admin` sea `'admin'` o `'superadmin'`.
+
+| Opción | Requiere tocar código | Quién activa | Mejor para |
+|---|---|---|---|
+| A: Firebase Console | No | Tú, desde la consola | Activar pocos chats rápido |
+| B: `activar.js` | Archivo nuevo | Tú, desde terminal | Automatizar varios chats |
+| C: `ACTIVAR_TODOS` | 1 línea | Automático | Pruebas personales |
+| D: Admins de grupo | Sí | Admins del grupo | Grupos con varios moderadores |
+
+---
 
 ### Paso 10: Alternativa con Docker
 El `Dockerfile` ya incluye Node 20, Python 3 y FFmpeg.
@@ -212,10 +310,23 @@ docker build -t ciel-bot .
 # Vincular WhatsApp (una sola vez, guarda la sesión en tu máquina)
 docker run -it --rm -v "$(pwd)/sesion_whatsapp:/app/sesion_whatsapp" ciel-bot node qr.js
 
-# Correr el bot en segundo plano
+# OPCIÓN 1 — Interactivo: el bot te pide la ruta de la clave (escribe /app/firebase-key.json) y la API Key
+docker run -it --name ciel-bot \
+  -v "$(pwd)/sesion_whatsapp:/app/sesion_whatsapp" \
+  -v "$(pwd)/firebase-key.json:/app/firebase-key.json:ro" ciel-bot
+# (para dejarlo corriendo y salir sin apagarlo: Ctrl+P y luego Ctrl+Q)
+
+# OPCIÓN 2 — Segundo plano: la clave de Firebase se monta como archivo y la API Key la escribes (oculta) en tu terminal
+read -rsp "GEMINI_API_KEY (Enter para omitir): " GEMINI_API_KEY; echo; export GEMINI_API_KEY
 docker run -d --name ciel-bot --restart unless-stopped \
+  -e FIREBASE_KEY_PATH=/app/firebase-key.json -e GEMINI_API_KEY \
+  -v "$(pwd)/firebase-key.json:/app/firebase-key.json:ro" \
   -v "$(pwd)/sesion_whatsapp:/app/sesion_whatsapp" ciel-bot
 ```
+> Con `--restart`, si el contenedor se reinicia solo (por ejemplo al reiniciar el servidor) conserva la configuración con la que se creó; la API Key de Gemini queda en la configuración del contenedor (visible con `docker inspect`), no en la imagen. La clave de Firebase nunca entra en la imagen: se monta como archivo de solo lectura. Con la Opción 1 no queda nada guardado, pero tendrás que escribir la API Key en cada reinicio.
+>
+> En plataformas en la nube que no permiten montar archivos, puedes pasar el contenido completo del JSON en la variable `FIREBASE_CREDENTIALS` (el bot la acepta en lugar de la ruta).
+
 Ver los logs: `docker logs -f ciel-bot`.
 
 ---
@@ -245,13 +356,10 @@ Se instala en `~/.nvm`, así que `npm install` nunca pedirá permisos. **No uses
 * Si no existe Python, instala [Miniforge](https://github.com/conda-forge/miniforge) (se instala en tu carpeta de usuario) y crea el entorno con `conda create -n ciel python=3.12`.
 
 ### FFmpeg sin `sudo`
-**Opción A (la más simple): reutilizar el FFmpeg que ya trae Node.** Al ejecutar `npm install` se descarga el paquete `ffmpeg-static`. Solo falta agregarlo al `PATH` antes de iniciar el bot:
+**Opción A (la más simple, ya viene resuelta): el FFmpeg que trae Node.** Al ejecutar `npm install` se descarga el paquete `ffmpeg-static`, y `index.js` lo agrega al `PATH` automáticamente al iniciar. Como Python se ejecuta desde Node, hereda ese `PATH` y `yt-dlp` encuentra FFmpeg **sin instalar nada**. Solo necesitas agregarlo a mano si ejecutas `main.py` directamente:
 ```bash
 export PATH="$PWD/node_modules/ffmpeg-static:$PATH"
-ffmpeg -version     # debe responder
-npm start
 ```
-Como Python se ejecuta desde Node, hereda ese `PATH` y `yt-dlp` encuentra FFmpeg.
 
 **Opción B: binario estático en tu carpeta personal (Linux).**
 ```bash
@@ -263,7 +371,11 @@ export PATH="$HOME/bin:$PATH"
 Para que sea permanente, agrega la línea `export PATH=...` a tu `~/.bashrc`.
 
 ### Mantener el bot encendido sin `sudo` ni `systemd`
+En segundo plano no hay terminal para escribir las credenciales, así que las defines **antes**, en tu terminal, y el bot las toma del entorno:
 ```bash
+export FIREBASE_KEY_PATH="$PWD/firebase-key.json"
+read -rsp "GEMINI_API_KEY (Enter para omitir): " GEMINI_API_KEY; echo; export GEMINI_API_KEY
+
 # Con nohup (viene en cualquier Linux)
 nohup npm start > bot.log 2>&1 &
 tail -f bot.log          # ver los logs
@@ -273,13 +385,13 @@ npm install pm2
 npx pm2 start index.js --name ciel-bot
 npx pm2 logs ciel-bot
 ```
-Activa el entorno virtual (y el `PATH` de FFmpeg) **antes** de lanzar cualquiera de los dos.
+Activa el entorno virtual de Python **antes** de lanzar cualquiera de los dos. Si usas `tmux` o `screen`, basta con ejecutar `npm start` dentro de la sesión y escribir las credenciales cuando las pida.
 
 ### Contenedores sin `sudo`
 Si Docker te exige `sudo`, usa **Podman** en modo *rootless*: acepta los mismos comandos del Paso 10 cambiando `docker` por `podman`.
 ```bash
 podman build -t ciel-bot .
-podman run -d --name ciel-bot -v "$(pwd)/sesion_whatsapp:/app/sesion_whatsapp" ciel-bot
+podman run -it --name ciel-bot -v "$(pwd)/sesion_whatsapp:/app/sesion_whatsapp" ciel-bot
 ```
 
 ### Sin computador propio o sin acceso al sistema
@@ -292,12 +404,14 @@ podman run -d --name ciel-bot -v "$(pwd)/sesion_whatsapp:/app/sesion_whatsapp" c
 
 | Problema | Causa probable | Solución |
 |---|---|---|
-| `ModuleNotFoundError: pymongo` | Entorno virtual sin activar | `source venv/bin/activate` y vuelve a ejecutar `npm start` |
+| `ModuleNotFoundError: firebase_admin` | Entorno virtual sin activar | `source venv/bin/activate` y vuelve a ejecutar `npm start` |
 | `python3: command not found` | Python no está en el PATH (Windows) | Usa WSL o Docker |
-| `Error crítico de conexión` (MongoDB) | IP no permitida o URI incorrecta | Revisa **Network Access** en Atlas y que `MONGO_URI` sea igual en `index.js` y `main.py` |
+| `aquí no hay una terminal interactiva` | Lo lanzaste en segundo plano (`nohup`, PM2, Docker `-d`) sin exportar las credenciales | Exporta `FIREBASE_KEY_PATH` primero (ver *Mantener el bot encendido*) o ejecútalo en primer plano con `npm start` |
+| `Error crítico al conectar a Firebase` (`5 NOT_FOUND`, `PERMISSION_DENIED`) | No creaste Firestore, la clave es de otro proyecto o la API de Firestore no está habilitada | Crea la base en **Firebase Console → Firestore Database** y usa la clave JSON del mismo proyecto |
 | El bot no responde a nada | El chat no está activado | Envía `#on` desde el número propietario |
 | `ACCESO DENEGADO` al usar `#on` | Tu número no está en `ADMINS_FIJOS` | Ver Paso 7 o activa el chat sin `#on` ([alternativas](#-alternativas-para-activar-el-bot-sin-on-sin-comandos-de-admin)) |
-| `Sesión cerrada` en `qr.js` | Sesión inválida | Borra la carpeta `sesion_whatsapp/` y repite el Paso 8 |
+| `qr.js` no muestra el QR o se queda reintentando | Versión de WhatsApp Web desactualizada (error 405), sin internet o sesión dañada | Ejecuta `npm install @whiskeysockets/baileys@latest`, luego `node qr.js --reset`; si el QR no se ve bien usa `node qr.js TUNUMERO` |
+| `Sesión cerrada` en `qr.js` | Sesión inválida | `qr.js` ya la borra solo; si persiste, `node qr.js --reset` |
 | `EACCES: permission denied` en `npm` | Node instalado a nivel de sistema | No uses `sudo`: instala Node con nvm (ver [alternativas sin `sudo`](#-alternativas-sin-permisos-de-administrador-sin-sudo)) |
 | Fallan `#play`, `#mp4`, `#tiktok` | FFmpeg ausente o `yt-dlp` desactualizado | Instala FFmpeg y ejecuta `pip install -U yt-dlp` |
 | `#ciel` responde "Mente Saturada" | Cuota gratuita de Gemini agotada (429) | Espera unos segundos o revisa tu API Key |
@@ -305,8 +419,10 @@ podman run -d --name ciel-bot -v "$(pwd)/sesion_whatsapp:/app/sesion_whatsapp" c
 ---
 
 ## 🔐 Recomendaciones de Seguridad
-* **No subas credenciales al repositorio.** Mueve `MONGO_URI` y la API Key de Gemini a variables de entorno (`process.env` en Node y `os.environ` en Python) y, si alguna vez estuvieron publicadas, **cambia la contraseña** del usuario de MongoDB.
-* Agrega un `.gitignore` con `sesion_whatsapp/`, `venv/` y `node_modules/`.
+* **La API Key de Gemini se pide por terminal al iniciar** y vive solo en la memoria del proceso. La clave de Firebase es un archivo JSON que nunca va en el código ni en git.
+* **No subas la clave JSON de Firebase** (`firebase-key.json`). Si alguna vez se publicó, bórrala en Firebase Console (Configuración → Cuentas de servicio → Administrar permisos → Claves) y genera otra. Y si alguna vez publicaste una contraseña de MongoDB en el repositorio, cámbiala o elimina ese usuario en Atlas: seguirá visible en el historial de commits antiguos.
+* **No subas `sesion_whatsapp/`**: quien la tenga controla la cuenta de WhatsApp del bot.
+* Los datos del mensaje (`sender`, `pushName`, texto) se pasan a Python como argumentos literales con `execFile`, sin shell, para evitar la inyección de comandos.
 
 ---
 > *Desarrollado con rigor técnico y optimizado para alto rendimiento.*

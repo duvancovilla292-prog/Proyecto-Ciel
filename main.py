@@ -9,19 +9,32 @@ from anime import manejar_anime
 from perfil import manejar_perfil
 
 # ==========================================
-# CONFIGURACIÓN MÍSTICA DE MONGODB ATLAS
+# CONFIGURACIÓN DE FIREBASE (FIRESTORE)
 # ==========================================
-from pymongo import MongoClient
-import certifi
+import firebase_admin
+from firebase_admin import credentials, firestore
 
-MONGO_URI = "mongodb+srv://cielbot:cielbot292@cluster0.o3phddj.mongodb.net/?appName=Cluster0"
+def _cargar_credenciales_firebase():
+    """Lee la clave de cuenta de servicio que index.js dejó en el entorno (ruta o JSON completo)"""
+    json_env = os.environ.get("FIREBASE_CREDENTIALS")
+    if json_env:
+        return credentials.Certificate(json.loads(json_env))
+    ruta = os.environ.get("FIREBASE_KEY_PATH") or os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+    if ruta:
+        return credentials.Certificate(ruta)
+    return None
 
 try:
-    client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
-    db_mongo = client['BotCielDB']
-    coleccion_economia = db_mongo['sistema_economia'] # <--- Colección en la nube para economia.json
+    _cred = _cargar_credenciales_firebase()
+    if _cred is None:
+        print("🛑 [PYTHON-FIREBASE] Falta FIREBASE_KEY_PATH. main.py lo ejecuta index.js, que pide la ruta de la clave por terminal al iniciar.", file=sys.stderr)
+        print("   Si lo ejecutas a mano, exporta antes la variable: export FIREBASE_KEY_PATH='/ruta/firebase-key.json'", file=sys.stderr)
+        sys.exit(1)
+    firebase_admin.initialize_app(_cred)
+    db_firestore = firestore.client()
+    coleccion_economia = db_firestore.collection('sistema_economia') # <--- Colección en la nube para economia.json
 except Exception as e:
-    print(f"🛑 [PYTHON-MONGO] Error crítico de conexión: {e}", file=sys.stderr)
+    print(f"🛑 [PYTHON-FIREBASE] Error crítico de conexión: {e}", file=sys.stderr)
     sys.exit(1)
 
 # ==========================================
@@ -29,26 +42,23 @@ except Exception as e:
 # ==========================================
 
 def cargar_grupo_db(chat_id):
-    """Carga los datos de economía de un grupo específico desde MongoDB Atlas"""
+    """Carga los datos de economía de un grupo específico desde Firestore"""
     try:
-        documento = coleccion_economia.find_one({"_id": chat_id})
-        if documento:
-            return documento.get("usuarios", {})
+        documento = coleccion_economia.document(chat_id).get()
+        if documento.exists:
+            return (documento.to_dict() or {}).get("usuarios", {})
         return {}
     except Exception as e:
-        print(f"⚠️ Error al cargar datos desde MongoDB: {e}", file=sys.stderr)
+        print(f"⚠️ Error al cargar datos desde Firestore: {e}", file=sys.stderr)
         return {}
 
 def guardar_grupo_db(chat_id, usuarios_data):
     """Guarda o actualiza los datos de economía de un grupo en la nube"""
     try:
-        coleccion_economia.update_one(
-            {"_id": chat_id},
-            {"$set": {"usuarios": usuarios_data}},
-            upsert=True
-        )
+        # set() sin merge reemplaza el documento entero (igual que el $set sobre "usuarios" en Mongo)
+        coleccion_economia.document(chat_id).set({"usuarios": usuarios_data})
     except Exception as e:
-        print(f"⚠️ Error al guardar datos en MongoDB: {e}", file=sys.stderr)
+        print(f"⚠️ Error al guardar datos en Firestore: {e}", file=sys.stderr)
 
 def registrar_usuario_si_no_existe(usuarios_chat, user_id, nombre="Usuario"):
     """Registra al usuario localmente en el diccionario del chat si no existe"""

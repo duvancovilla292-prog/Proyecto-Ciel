@@ -14,6 +14,11 @@ auth_info*/
 *.key
 secrets.*
 
+# Clave de cuenta de servicio de Firebase (da acceso total a tu proyecto)
+firebase-key.json
+*firebase-adminsdk*.json
+serviceAccount*.json
+
 # ==========================================
 # 📦 Dependencias
 # ==========================================
@@ -37,7 +42,7 @@ __pycache__/
 imagenes/descarga_*
 
 # ==========================================
-# 👤 Datos locales de usuarios (ahora viven en MongoDB Atlas)
+# 👤 Datos locales de usuarios (ahora viven en Firebase Firestore)
 # ==========================================
 database.json
 economia.json

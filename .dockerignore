@@ -1,0 +1,18 @@
+# Sesión de WhatsApp y secretos: nunca dentro de la imagen
+sesion_whatsapp/
+auth_info*/
+.env
+.env.*
+firebase-key.json
+*firebase-adminsdk*.json
+serviceAccount*.json
+*.pem
+*.key
+
+# Dependencias y basura local
+node_modules/
+venv/
+.venv/
+__pycache__/
+*.log
+.git/
