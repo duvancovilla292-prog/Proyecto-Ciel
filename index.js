@@ -20,6 +20,21 @@ const { GoogleGenAI } = require('@google/genai');
 let ai = null;
 
 // ==========================================
+// SERVIDOR WEB MÍNIMO (solo para Render y similares)
+// ==========================================
+// Los "Web Services" de Render exigen un puerto abierto: si no lo detectan en unos minutos,
+// marcan el despliegue como fallido ("No open ports detected"). Solo se abre cuando existe la
+// variable PORT (la define Render); en tu computador no se abre nada.
+if (process.env.PORT) {
+    require('http').createServer((req, res) => {
+        res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('Ciel Bot activo');
+    }).listen(Number(process.env.PORT), '0.0.0.0', () => {
+        console.log(`🌐 [WEB] Puerto ${process.env.PORT} abierto (necesario en Render).`);
+    });
+}
+
+// ==========================================
 // CONFIGURACIÓN DE FIREBASE (FIRESTORE)
 // ==========================================
 let firebaseListo = false; // se activa en configurarCredenciales()
@@ -255,6 +270,9 @@ function desenvolverMensaje(contenido) {
     return actual;
 }
 
+// Si pones DEBUG_MENSAJES=true, se muestra en los logs TODO lo que le llega al bot (para diagnosticar mensajes que "no aparecen")
+const MODO_DEBUG_MENSAJES = String(process.env.DEBUG_MENSAJES || '').toLowerCase() === 'true';
+
 // Si pones CHATS_PRIVADOS_ACTIVOS=true, el bot responde en chats 1 a 1 sin necesidad de #on
 const CHATS_PRIVADOS_ACTIVOS = String(process.env.CHATS_PRIVADOS_ACTIVOS || '').toLowerCase() === 'true';
 
@@ -281,10 +299,22 @@ async function iniciarBot() {
         console.log("⚠️ [CONEXIÓN] No se pudo consultar la versión de WhatsApp Web. Se usará la incluida en Baileys.");
     }
 
+    // Baileys escribe aquí avisos y errores internos (p. ej. "failed to decrypt message").
+    // Antes estaban ocultos; ahora salen resumidos. Para ocultarlos: LOG_BAILEYS=false
+    const mostrarLogsBaileys = String(process.env.LOG_BAILEYS || '').toLowerCase() !== 'false';
+    const registrarBaileys = (nivel) => (obj, msg) => {
+        if (!mostrarLogsBaileys) return;
+        const texto = typeof msg === 'string' ? msg : (typeof obj === 'string' ? obj : '');
+        const detalle = obj?.err?.message || obj?.error?.message || '';
+        const clave = obj?.key?.remoteJid ? ` | chat: ${obj.key.remoteJid}` : '';
+        console.log(`📝 [BAILEYS-${nivel}] ${texto}${detalle ? ` → ${detalle}` : ''}${clave}`.slice(0, 300));
+    };
     const loggerSilencioso = {
-        level: 'silent',
+        level: mostrarLogsBaileys ? 'warn' : 'silent',
         child() { return this; },
-        trace() {}, debug() {}, info() {}, warn() {}, error() {}
+        trace() {}, debug() {}, info() {},
+        warn: registrarBaileys('AVISO'),
+        error: registrarBaileys('ERROR')
     };
 
     const sock = makeWASocket({
@@ -301,6 +331,9 @@ async function iniciarBot() {
     sock.ev.on('messages.upsert', async (m) => {
         // WhatsApp puede entregar varios mensajes juntos (p. ej. al reconectar): se atienden todos
         for (const mensaje of m.messages) {
+            if (MODO_DEBUG_MENSAJES) {
+                console.log(`🔎 [DEBUG] llegó (${m.type}) de ${mensaje?.key?.remoteJid} | fromMe: ${Boolean(mensaje?.key?.fromMe)} | campos: ${Object.keys(mensaje?.message || {}).join(',') || '(vacío)'} | stub: ${mensaje?.messageStubType ?? '-'}`);
+            }
             try {
                 await procesarMensaje(mensaje);
             } catch (error) {
@@ -310,7 +343,14 @@ async function iniciarBot() {
     });
 
     async function procesarMensaje(msg) {
-        if (!msg || !msg.message) return;
+        if (msg && !msg.message) {
+            // Mensaje sin contenido: lo normal es que WhatsApp no pudo descifrarlo (sesión de cifrado nueva o dañada)
+            if (msg.messageStubType === 2 || msg.messageStubType === 'CIPHERTEXT') {
+                console.log(`⚠️ [NO DESCIFRADO] Llegó un mensaje de ${msg.key?.remoteJid} pero no se pudo leer (WhatsApp lo reintenta solo; si se repite, vuelve a vincular el bot).`);
+            }
+            return;
+        }
+        if (!msg) return;
 
         const chatJid = msg.key.remoteJid;
         if (!chatJid || chatJid === 'status@broadcast') return;
