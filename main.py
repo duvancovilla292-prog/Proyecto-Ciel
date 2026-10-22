@@ -62,6 +62,11 @@ def guardar_grupo_db(chat_id, usuarios_data):
 
 def registrar_usuario_si_no_existe(usuarios_chat, user_id, nombre="Usuario"):
     """Registra al usuario localmente en el diccionario del chat si no existe"""
+    existente = usuarios_chat.get(user_id)
+    if isinstance(existente, dict) and nombre and nombre != "Usuario" and existente.get("nombre") != nombre:
+        # Mantiene el nombre al día (y corrige nombres que se guardaron mal)
+        existente["nombre"] = nombre
+
     if user_id not in list(usuarios_chat.keys()):
         # Si por alguna razón los datos de perfil global venían anidados (como en tu database anterior), los limpiamos
         if isinstance(usuarios_chat.get(user_id), dict) and "billetera" in usuarios_chat[user_id]:

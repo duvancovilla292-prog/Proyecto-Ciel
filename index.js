@@ -270,6 +270,20 @@ function desenvolverMensaje(contenido) {
     return actual;
 }
 
+// Quita el sufijo de dispositivo de un id: "5732...:12@s.whatsapp.net" → "5732...@s.whatsapp.net"
+function limpiarJid(jid) {
+    return jid ? jid.replace(/:\d+@/, '@') : jid;
+}
+
+// WhatsApp puede identificar a una misma persona por número (@s.whatsapp.net) o por LID (@lid).
+// Se prefiere el número para que los datos ya guardados (economía, niveles) sigan siendo los mismos.
+function elegirIdUsuario(principal, alterno) {
+    const p = limpiarJid(principal);
+    const a = limpiarJid(alterno);
+    if (p && p.endsWith('@lid') && a && a.endsWith('@s.whatsapp.net')) return a;
+    return p;
+}
+
 // Si pones DEBUG_MENSAJES=true, se muestra en los logs TODO lo que le llega al bot (para diagnosticar mensajes que "no aparecen")
 const MODO_DEBUG_MENSAJES = String(process.env.DEBUG_MENSAJES || '').toLowerCase() === 'true';
 
@@ -357,8 +371,21 @@ async function iniciarBot() {
 
         const chatJidAlt = msg.key.remoteJidAlt; // WhatsApp migra a ids tipo LID: un mismo chat puede llegar con dos formatos
         const esGrupo = chatJid.endsWith('@g.us');
-        const sender = msg.key.participant || chatJid;
         const pushName = msg.pushName || "Usuario";
+
+        // Quién escribió. OJO: en un chat 1 a 1, 'remoteJid' es SIEMPRE la otra persona, incluso cuando el
+        // mensaje lo envié yo desde el teléfono del bot (fromMe). Antes se tomaba el chat como autor y los
+        // comandos del dueño quedaban registrados con la cuenta (y el nombre) de la otra persona.
+        let sender;
+        if (msg.key.fromMe) {
+            sender = limpiarJid(sock.user?.id) || chatJid;
+        } else if (esGrupo) {
+            sender = elegirIdUsuario(msg.key.participant, msg.key.participantAlt) || chatJid;
+        } else {
+            sender = elegirIdUsuario(chatJid, chatJidAlt);
+        }
+        // Identificador del chat para guardar datos (en privados, el número si se conoce)
+        const chatIdDatos = esGrupo ? chatJid : elegirIdUsuario(chatJid, chatJidAlt);
 
         // El primer campo del mensaje no siempre es el texto (a veces es 'messageContextInfo'),
         // así que se busca el texto (o el pie de foto) en todos los lugares posibles
@@ -461,7 +488,7 @@ async function iniciarBot() {
                 
                 if (!usuario.nivel) usuario.nivel = 1;
                 if (!usuario.xp) usuario.xp = 0;
-                if (!usuario.nombre) usuario.nombre = pushName;
+                if (pushName !== "Usuario" && usuario.nombre !== pushName) usuario.nombre = pushName; // mantiene el nombre al día (y corrige nombres mal guardados)
 
                 const xpGanada = Math.floor(Math.random() * (25 - 15 + 1)) + 15;
                 usuario.xp += xpGanada;
@@ -599,7 +626,7 @@ async function iniciarBot() {
         // ==========================================
         // execFile pasa cada dato como argumento literal (sin shell): un mensaje como
         // `#x "; rm -rf ~` ya no puede ejecutar comandos en el servidor.
-        execFile('python3', ['main.py', sender, pushName, texto, chatJid], {
+        execFile('python3', ['main.py', sender, pushName, texto, chatIdDatos], {
             cwd: __dirname,
             maxBuffer: 10 * 1024 * 1024
         }, (error, stdout, stderr) => {
