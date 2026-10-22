@@ -1,4 +1,3 @@
-./cielbot-7e2c9-firebase-adminsdk-fbsvc-8bcf3e529b.json
 # 🌟 Ciel Bot Místico - Documentación y Guía del Repositorio
 
 > **Bot modular de automatización y entretenimiento para WhatsApp** impulsado con economía virtual, sistema Gacha de personajes de anime/ciencia, reacciones multimedia interactivas y motor de descargas de redes sociales.
@@ -31,6 +30,7 @@ El proyecto combina un **cliente de WhatsApp en Node.js** (que recibe los mensaj
 📦 Proyecto-Ciel/
  ┣ 📜 index.js           # Cliente de WhatsApp (Baileys): recibe mensajes, #on/#off, stickers, #ciel (Gemini) y llama a main.py.
  ┣ 📜 qr.js              # Vinculación inicial con WhatsApp (genera el QR y guarda la sesión).
+ ┣ 📧 correoQR.js        # Envía el QR por correo cuando el bot corre sin terminal (Render).
  ┣ 📜 main.py            # Enrutador en Python: conecta con Firestore y deriva cada comando al módulo correcto.
  ┣ 📜 economia.py        # Núcleo financiero, minijuegos y comandos globales.
  ┣ 📜 gacha.py           # Sistema de invocación, inventario, mercado y colección de personajes.
@@ -42,7 +42,8 @@ El proyecto combina un **cliente de WhatsApp en Node.js** (que recibe los mensaj
  ┣ 🐳 Dockerfile         # Despliegue en contenedor (Node 20 + Python 3 + FFmpeg).
  ┣ 🚫 .gitignore         # Evita subir sesión de WhatsApp, .env, clave de Firebase, node_modules, etc.
  ┣ 🚫 .dockerignore      # Evita copiar sesión, clave de Firebase y secretos dentro de la imagen.
- ┗ 📁 imagenes/          # Recursos multimedia (personajes y reacciones).
+ ┣ 📁 imagenes/          # Recursos multimedia (personajes y reacciones).
+ ┗ 📁 descargas/         # Videos y audios descargados (se crea sola; temporal).
 ```
 
 ---
@@ -70,7 +71,7 @@ El proyecto combina un **cliente de WhatsApp en Node.js** (que recibe los mensaj
   * `descargar_youtube(args, es_audio)`: Realiza búsquedas directas en YouTube o procesa enlaces URL para convertirlos a audio `.mp3` (mediante FFmpeg) o video `.mp4`.
   * `descargar_tiktok(link, pushName)`: Extrae videos libres de marca de agua desde TikTok.
   * `descargar_redes_sociales(link)`: Automatiza la descarga de Reels y videos públicos de Facebook e Instagram.
-* **Relación con otros archivos:** Los archivos descargados se almacenan temporalmente en la carpeta `imagenes/` para que el bot principal pueda adjuntarlos y enviarlos en la respuesta de WhatsApp.
+* **Relación con otros archivos:** Los archivos descargados se almacenan temporalmente en la carpeta `descargas/` para que el bot principal pueda adjuntarlos y enviarlos en la respuesta de WhatsApp.
 
 ### 4. `gacha.py` — Sistema de Invocación Coleccionable
 * **¿Qué hace?** Implementa un sistema completo de tipo *Gacha* donde los usuarios pueden gastar sus *Coins* ganadas en `economia.py` para invocar personajes coleccionables de diferentes universos (*Tensura, Solo Leveling, Dr. Stone, Jujutsu Kaisen*, etc.).
@@ -88,13 +89,13 @@ El proyecto combina un **cliente de WhatsApp en Node.js** (que recibe los mensaj
 graph TD
     A[economia.py / Núcleo Central] -->|Valida saldo y Cooldowns| B[gacha.py / Sistema Coleccionable]
     A -->|Procesa nombres y base de datos| C[anime.py / Reacciones Sociales]
-    D[descargador.py / yt-dlp] -->|Guarda archivos multimedia| E[(Carpeta imagenes/)]
+    D[descargador.py / yt-dlp] -->|Guarda archivos multimedia| E[(Carpeta descargas/)]
     C -->|Lee prefijos y archivos| E
     Gacha[gacha.py] -->|Lee avatares de personajes| E
 ```
 
 * **Flujo Financiero:** El usuario genera ingresos trabajando o cometiendo delitos en `economia.py`. Con esas *Coins*, puede gastar capital en tiradas dentro de `gacha.py`.
-* **Flujo Multimedia:** Tanto `anime.py` como `descargador.py` interactúan directamente con el sistema de archivos local (`imagenes/`) para suministrar recursos visuales enriquecidos al chat.
+* **Flujo Multimedia:** `anime.py` lee del sistema de archivos local (`imagenes/`) y `descargador.py` guarda en `descargas/` para suministrar recursos visuales enriquecidos al chat.
 
 ---
 
@@ -332,6 +333,45 @@ Ver los logs: `docker logs -f ciel-bot`.
 
 ---
 
+### Paso 11: Vincular WhatsApp en Render (sin terminal)
+En Render no hay terminal, así que el QR dibujado en los logs se ve mal. Hay dos formas de vincular; elige una.
+
+#### Opción A (recomendada): código de 8 caracteres
+Se lee como texto en los logs, no necesita correo y dura más que el QR.
+
+1. En Render → **Environment Variables** agrega tu número de WhatsApp **con código de país y sin `+` ni espacios**:
+   ```text
+   WA_NUMERO = 573001234567
+   ```
+2. Guarda y despliega. En los **Logs** aparecerá algo así:
+   ```text
+   🔑 [SISTEMA] Sesión no vinculada. Tu código de vinculación es:
+
+           ABCD-EFGH
+   ```
+3. En el celular: **WhatsApp → Ajustes → Dispositivos vinculados → Vincular un dispositivo → "Vincular con el número de teléfono"** y escribe el código.
+
+Si el código caduca, el bot genera uno nuevo cuando reconecta (unos minutos después). Con `WA_NUMERO` definido ya no se muestra el QR; también funciona en tu computador.
+
+#### Opción B: el QR llega por correo
+Si el bot no tiene terminal y están definidas las dos variables de abajo, **envía el QR como imagen a tu correo**. (En tu computador, con terminal, se sigue dibujando en pantalla.)
+
+1. Crea una cuenta gratis en [resend.com](https://resend.com) con **el correo donde quieres recibir el QR** y genera una API Key en **API Keys**.
+2. En Render → **Environment Variables** agrega:
+
+| Variable | Valor |
+|---|---|
+| `QR_EMAIL_DESTINO` | El correo que recibirá el QR (con el remitente de prueba debe ser el mismo con el que creaste la cuenta de Resend) |
+| `RESEND_API_KEY` | La API Key de Resend |
+| `QR_EMAIL_REMITENTE` | *(opcional)* remitente propio si verificaste un dominio en Resend; por defecto `Ciel Bot <onboarding@resend.dev>` |
+
+3. Guarda y despliega. Te llegará un correo con `qr-whatsapp.png` adjunto. Ábrelo **desde otra pantalla** y escanéalo con el celular.
+
+* El QR dura menos de un minuto. Si caduca, llega otro correo unos minutos después (máximo 5 por arranque; luego hay que reiniciar el servicio).
+* Se usa la API de Resend (HTTPS) y no SMTP, porque Render bloquea los puertos SMTP en los servicios gratuitos.
+
+> ⚠️ En Render la carpeta `sesion_whatsapp/` **se borra en cada deploy o reinicio** salvo que uses un disco persistente (plan de pago) montado en esa ruta. Sin disco tendrás que vincular de nuevo cada vez.
+
 ## 🔓 Alternativas sin permisos de administrador (sin `sudo`)
 
 Si usas un computador compartido, un hosting o un entorno donde no puedes ejecutar `sudo`, todo se puede instalar **dentro de tu carpeta de usuario**.
@@ -412,6 +452,8 @@ podman run -it --name ciel-bot -v "$(pwd)/sesion_whatsapp:/app/sesion_whatsapp" 
 | El bot no responde a nada | El chat no está activado | Envía `#on` desde el número propietario |
 | `ACCESO DENEGADO` al usar `#on` | Tu número no está en `ADMINS_FIJOS` | Ver Paso 7 o activa el chat sin `#on` ([alternativas](#-alternativas-para-activar-el-bot-sin-on-sin-comandos-de-admin)) |
 | `qr.js` no muestra el QR o se queda reintentando | Versión de WhatsApp Web desactualizada (error 405), sin internet o sesión dañada | Ejecuta `npm install @whiskeysockets/baileys@latest`, luego `node qr.js --reset`; si el QR no se ve bien usa `node qr.js TUNUMERO` |
+| En Render no aparece el código de vinculación | Falta `WA_NUMERO`, el número lleva `+`/espacios o no tiene código de país | Usa solo dígitos con código de país (ej. `573001234567`) y busca `[SISTEMA]` en los logs |
+| En Render no llega el correo con el QR | Faltan `QR_EMAIL_DESTINO` o `RESEND_API_KEY`, o el destino no es el correo de tu cuenta de Resend | Revisa los logs: la línea `[CORREO-QR]` muestra la respuesta de Resend (ej. `403`) |
 | `Sesión cerrada` en `qr.js` | Sesión inválida | `qr.js` ya la borra solo; si persiste, `node qr.js --reset` |
 | `EACCES: permission denied` en `npm` | Node instalado a nivel de sistema | No uses `sudo`: instala Node con nvm (ver [alternativas sin `sudo`](#-alternativas-sin-permisos-de-administrador-sin-sudo)) |
 | Fallan `#play`, `#mp4`, `#tiktok` | FFmpeg ausente o `yt-dlp` desactualizado | Instala FFmpeg y ejecuta `pip install -U yt-dlp` |

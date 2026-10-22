@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 const admin = require('firebase-admin');
+const { correoQRConfigurado, enviarQRPorCorreo, reiniciarContadorQR } = require('./correoQR');
 
 // FFmpeg incluido en el proyecto (ffmpeg-static): también lo ve Python (yt-dlp) sin instalar nada con sudo
 const rutaFfmpeg = require('ffmpeg-static');
@@ -559,12 +560,41 @@ async function iniciarBot() {
         });
     });
 
+    // Si defines WA_NUMERO (con código de país, ej. 573001234567) se usa un código de 8 caracteres en vez del QR
+    const numeroVinculacion = (process.env.WA_NUMERO || '').replace(/\D/g, '');
+    let codigoSolicitado = false; // un código por conexión
+
     sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect, qr } = update;
 
         if (qr) {
-            console.log("\n✨ [SISTEMA] Sesión no vinculada. Escanea este QR (o usa 'node qr.js'):");
-            qrcode.generate(qr, { small: true });
+            const hayTerminal = Boolean(process.stdin.isTTY && process.stdout.isTTY);
+            if (numeroVinculacion) {
+                // Código de emparejamiento: es texto, se lee bien en los logs de Render y dura más que el QR
+                if (!codigoSolicitado && !sock.authState.creds.registered) {
+                    codigoSolicitado = true;
+                    try {
+                        const codigo = await sock.requestPairingCode(numeroVinculacion);
+                        const bonito = codigo.match(/.{1,4}/g)?.join('-') || codigo;
+                        console.log('\n🔑 [SISTEMA] Sesión no vinculada. Tu código de vinculación es:\n');
+                        console.log(`        ${bonito}\n`);
+                        console.log('En el celular: WhatsApp → Ajustes → Dispositivos vinculados → Vincular un dispositivo');
+                        console.log('→ "Vincular con el número de teléfono" y escribe el código.\n');
+                    } catch (error) {
+                        console.error('🛑 [SISTEMA] No se pudo generar el código de vinculación:', error?.message || error);
+                    }
+                }
+            } else if (hayTerminal || !correoQRConfigurado()) {
+                // En tu computador (terminal real) el QR se dibuja aquí mismo
+                console.log("\n✨ [SISTEMA] Sesión no vinculada. Escanea este QR (o usa 'node qr.js'):");
+                qrcode.generate(qr, { small: true });
+                if (!hayTerminal) {
+                    console.log("💡 Sin terminal el QR se ve mal. Define WA_NUMERO para usar un código de 8 caracteres, o QR_EMAIL_DESTINO y RESEND_API_KEY para recibir el QR por correo.");
+                }
+            } else {
+                // En un servidor sin terminal (Render) el QR llega como imagen a tu correo
+                await enviarQRPorCorreo(qr);
+            }
         }
         
         if (connection === 'close') {
@@ -585,6 +615,7 @@ async function iniciarBot() {
             }
         } else if (connection === 'open') {
             console.log('✨ ¡Conexión mística establecida con éxito en WhatsApp!');
+            reiniciarContadorQR();
         }
     });
 }
